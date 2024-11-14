@@ -11,6 +11,9 @@
 
     <modules>
 
+        <module>shortLink-project</module>
+        <module>shortLink-gateway</module>
+        <module>shortLink-admin</module>
     </modules>
 
     <properties>
