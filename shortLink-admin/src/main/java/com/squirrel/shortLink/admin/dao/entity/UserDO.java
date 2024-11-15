@@ -1,16 +1,21 @@
 package com.squirrel.shortLink.admin.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.squirrel.shortLink.admin.common.database.BaseDO;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-import java.util.Date;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户持久层实体
  */
 @Data
 @TableName("t_user")
-public class UserDO {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDO extends BaseDO {
 
     /**
      * id
@@ -53,24 +58,4 @@ public class UserDO {
      */
     @TableField("deletion_time")
     private Long deletionTime;
-
-    /**
-     * 创建时间
-     */
-    @TableField(value = "create_time")
-    private Date createTime;
-
-    /**
-     * 修改时间
-     */
-    @TableField(value = "update_time")
-    private Date updateTime;
-
-    /**
-     * 删除标识:
-     * 0: 未删除
-     * 1: 已删除
-     */
-    @TableField(value = "del_flag",fill = FieldFill.INSERT)
-    private Integer delFlag;
 }
