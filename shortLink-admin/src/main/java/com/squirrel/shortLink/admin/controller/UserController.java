@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.squirrel.shortLink.admin.common.convention.result.Result;
 import com.squirrel.shortLink.admin.common.convention.result.Results;
 import com.squirrel.shortLink.admin.dto.req.UserRegisterReqDTO;
+import com.squirrel.shortLink.admin.dto.req.UserUpdateReqDTO;
 import com.squirrel.shortLink.admin.dto.resp.UserActualRespDTO;
 import com.squirrel.shortLink.admin.dto.resp.UserRespDTO;
 import com.squirrel.shortLink.admin.service.UserService;
@@ -55,10 +56,22 @@ public class UserController {
 
     /**
      * 注册用户
+     * @param requestParam 注册信息
      */
     @PostMapping("/api/short-link/v1/user")
     public Result<Void> register(@RequestBody UserRegisterReqDTO requestParam) {
         userService.register(requestParam);
+        return Results.success();
+    }
+
+    /**
+     * 修改用户
+     * @param requestParam 修改的用户信息
+     * @return Result<Void>
+     */
+    @PutMapping("/api/short-link/v1/user")
+    public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam) {
+        userService.update(requestParam);
         return Results.success();
     }
 }

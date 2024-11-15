@@ -1,12 +1,14 @@
 package com.squirrel.shortLink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.shortLink.admin.common.convention.exception.ClientException;
 import com.squirrel.shortLink.admin.dao.entity.UserDO;
 import com.squirrel.shortLink.admin.dao.mapper.UserMapper;
 import com.squirrel.shortLink.admin.dto.req.UserRegisterReqDTO;
+import com.squirrel.shortLink.admin.dto.req.UserUpdateReqDTO;
 import com.squirrel.shortLink.admin.dto.resp.UserRespDTO;
 import com.squirrel.shortLink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -84,5 +86,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         }finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * 修改用户
+     * @param requestParam 修改的用户信息
+     */
+    @Override
+    public void update(UserUpdateReqDTO requestParam) {
+        // TODO 验证当前用户名是否为登录用户
+        // 1.修改数据库中数据
+        getBaseMapper().update(
+                BeanUtil.toBean(requestParam,UserDO.class),
+                Wrappers.<UserDO>lambdaUpdate()
+                .eq(UserDO::getUsername, requestParam.getUsername())
+        );
     }
 }

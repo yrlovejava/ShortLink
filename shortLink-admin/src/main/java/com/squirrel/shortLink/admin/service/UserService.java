@@ -3,6 +3,7 @@ package com.squirrel.shortLink.admin.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.squirrel.shortLink.admin.dao.entity.UserDO;
 import com.squirrel.shortLink.admin.dto.req.UserRegisterReqDTO;
+import com.squirrel.shortLink.admin.dto.req.UserUpdateReqDTO;
 import com.squirrel.shortLink.admin.dto.resp.UserRespDTO;
 
 /**
@@ -29,4 +30,10 @@ public interface UserService extends IService<UserDO> {
      * @param requestParam 注册信息
      */
     void register(UserRegisterReqDTO requestParam);
+
+    /**
+     * 修改用户
+     * @param requestParam 修改的用户信息
+     */
+    void update(UserUpdateReqDTO requestParam);
 }
