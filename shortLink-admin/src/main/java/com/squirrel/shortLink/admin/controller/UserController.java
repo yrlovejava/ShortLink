@@ -10,7 +10,6 @@ import com.squirrel.shortLink.admin.dto.resp.UserActualRespDTO;
 import com.squirrel.shortLink.admin.dto.resp.UserLoginRespDTO;
 import com.squirrel.shortLink.admin.dto.resp.UserRespDTO;
 import com.squirrel.shortLink.admin.service.UserService;
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    @Resource
-    private UserService userService;
+    private final UserService userService;
 
     /**
      * 根据用户名查询用户信息
