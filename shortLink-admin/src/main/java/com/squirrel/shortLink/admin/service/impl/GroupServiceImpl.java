@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.squirrel.shortLink.admin.common.biz.user.UserContext;
 import com.squirrel.shortLink.admin.dao.entity.GroupDO;
 import com.squirrel.shortLink.admin.dao.mapper.GroupMapper;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupRespDTO;
@@ -36,6 +37,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .name(name)
                 .gid(gid)
                 .sortOrder(0)
+                .username(UserContext.getUsername())
                 .build();
         getBaseMapper().insert(groupDO);
     }
@@ -48,8 +50,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     private boolean hasGid(String gid) {
         return getBaseMapper().selectOne(Wrappers.<GroupDO>lambdaQuery()
                 .eq(GroupDO::getGid, gid)
-                // TODO 设置用户名
-                .eq(GroupDO::getUsername, null)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
         ) != null;
     }
 
@@ -63,7 +64,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.<GroupDO>lambdaQuery()
                 .eq(GroupDO::getDelFlag, 0)
                 // TODO 从当前上下文获取用户名
-                .eq(GroupDO::getUsername, "yr")
+                .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder)
                 .orderByDesc(GroupDO::getUpdateTime);
 
