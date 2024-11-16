@@ -2,17 +2,20 @@ package com.squirrel.shortLink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.shortLink.admin.common.biz.user.UserContext;
 import com.squirrel.shortLink.admin.dao.entity.GroupDO;
 import com.squirrel.shortLink.admin.dao.mapper.GroupMapper;
+import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.squirrel.shortLink.admin.service.GroupService;
 import com.squirrel.shortLink.admin.toolkit.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.swing.*;
 import java.util.List;
 
 /**
@@ -63,7 +66,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         // 1.构造查询条件
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.<GroupDO>lambdaQuery()
                 .eq(GroupDO::getDelFlag, 0)
-                // TODO 从当前上下文获取用户名
                 .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder)
                 .orderByDesc(GroupDO::getUpdateTime);
@@ -73,5 +75,23 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
         // 3.返回结果
         return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+    }
+
+    /**
+     * 修改短链接分组信息
+     * @param requestParam 修改分组信息
+     */
+    @Override
+    public void updateGroup(ShortLinkGroupUpdateReqDTO requestParam) {
+        // 1.构造查询方法
+        LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.<GroupDO>lambdaUpdate()
+                .eq(GroupDO::getGid, requestParam.getGid())
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getDelFlag, 0);
+
+        // 2.修改数据库
+        GroupDO groupDO = new GroupDO();
+        groupDO.setName(requestParam.getName());
+        getBaseMapper().update(groupDO, updateWrapper);
     }
 }
