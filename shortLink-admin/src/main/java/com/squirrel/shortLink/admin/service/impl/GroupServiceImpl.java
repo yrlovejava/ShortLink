@@ -94,4 +94,22 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         groupDO.setName(requestParam.getName());
         getBaseMapper().update(groupDO, updateWrapper);
     }
+
+    /**
+     * 删除分组id
+     * @param gid 分组id
+     */
+    @Override
+    public void deleteGroup(String gid) {
+        // 1.构造删除条件
+        LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.<GroupDO>lambdaUpdate()
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getGid, gid)
+                .eq(GroupDO::getDelFlag, 0);
+
+        // 2.删除数据(实际上是修改 delFlag)
+        GroupDO groupDO = new GroupDO();
+        groupDO.setDelFlag(1);
+        getBaseMapper().update(groupDO,updateWrapper);
+    }
 }
