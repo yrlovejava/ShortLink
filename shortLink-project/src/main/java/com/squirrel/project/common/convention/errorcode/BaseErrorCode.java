@@ -1,4 +1,4 @@
-package com.squirrel.shortLink.admin.common.convention.errorcode;
+package com.squirrel.project.common.convention.errorcode;
 
 /**
  * 基础错误码定义
@@ -37,7 +37,7 @@ public enum BaseErrorCode implements IErrorCode {
 
     private final String message;
 
-   BaseErrorCode(String code,String message) {
+   BaseErrorCode(String code, String message) {
         this.code = code;
         this.message = message;
     }

@@ -1,4 +1,4 @@
-package com.squirrel.shortLink.admin.common.convention.errorcode;
+package com.squirrel.project.common.convention.errorcode;
 
 /**
  * 平台错误码

@@ -1,4 +1,4 @@
-package com.squirrel.shortLink.admin.common.convention.result;
+package com.squirrel.common.convention.result;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

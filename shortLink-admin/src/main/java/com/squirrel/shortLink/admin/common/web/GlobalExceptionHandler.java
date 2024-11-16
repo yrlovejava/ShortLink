@@ -2,10 +2,10 @@ package com.squirrel.shortLink.admin.common.web;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
-import com.squirrel.shortLink.admin.common.convention.errorcode.BaseErrorCode;
-import com.squirrel.shortLink.admin.common.convention.exception.AbstractException;
-import com.squirrel.shortLink.admin.common.convention.result.Result;
-import com.squirrel.shortLink.admin.common.convention.result.Results;
+import com.squirrel.common.convention.errorcode.BaseErrorCode;
+import com.squirrel.common.convention.exception.AbstractException;
+import com.squirrel.common.convention.result.Result;
+import com.squirrel.common.convention.result.Results;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

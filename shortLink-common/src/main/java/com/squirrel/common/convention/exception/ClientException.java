@@ -1,12 +1,13 @@
-package com.squirrel.shortLink.admin.common.convention.exception;
+package com.squirrel.common.convention.exception;
 
-import com.squirrel.shortLink.admin.common.convention.errorcode.BaseErrorCode;
-import com.squirrel.shortLink.admin.common.convention.errorcode.IErrorCode;
+
+import com.squirrel.common.convention.errorcode.BaseErrorCode;
+import com.squirrel.common.convention.errorcode.IErrorCode;
 
 /**
  * 客户端异常
  */
-public class ClientException extends AbstractException{
+public class ClientException extends AbstractException {
 
     public ClientException(IErrorCode errorCode) {
         this(null, null, errorCode);

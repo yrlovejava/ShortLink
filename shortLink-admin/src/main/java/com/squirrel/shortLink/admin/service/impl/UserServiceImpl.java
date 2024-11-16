@@ -5,7 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.squirrel.shortLink.admin.common.convention.exception.ClientException;
+import com.squirrel.common.convention.exception.ClientException;
 import com.squirrel.shortLink.admin.dao.entity.UserDO;
 import com.squirrel.shortLink.admin.dao.mapper.UserMapper;
 import com.squirrel.shortLink.admin.dto.req.UserLoginReqDTO;
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.squirrel.shortLink.admin.common.enums.UserErrorCodeEnum.*;
+import static com.squirrel.common.enums.UserErrorCodeEnum.*;
 import static com.squirrel.shortLink.admin.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
 
 /**

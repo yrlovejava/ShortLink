@@ -1,7 +1,7 @@
 package com.squirrel.shortLink.admin.controller;
 
-import com.squirrel.shortLink.admin.common.convention.result.Result;
-import com.squirrel.shortLink.admin.common.convention.result.Results;
+import com.squirrel.common.convention.result.Result;
+import com.squirrel.common.convention.result.Results;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupUpdateReqDTO;

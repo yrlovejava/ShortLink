@@ -3,8 +3,8 @@ package com.squirrel.shortLink.admin.common.biz.user;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
 import com.google.common.collect.Lists;
-import com.squirrel.shortLink.admin.common.convention.exception.ClientException;
-import com.squirrel.shortLink.admin.common.convention.result.Results;
+import com.squirrel.common.convention.exception.ClientException;
+import com.squirrel.common.convention.result.Results;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +17,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Objects;
 
-import static com.squirrel.shortLink.admin.common.enums.UserErrorCodeEnum.USER_TOKEN_FAIL;
+import static com.squirrel.common.enums.UserErrorCodeEnum.USER_TOKEN_FAIL;
 
 /**
  * 用户信息传输过滤器

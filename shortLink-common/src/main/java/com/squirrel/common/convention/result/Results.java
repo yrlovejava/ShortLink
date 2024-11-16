@@ -1,7 +1,7 @@
-package com.squirrel.shortLink.admin.common.convention.result;
+package com.squirrel.common.convention.result;
 
-import com.squirrel.shortLink.admin.common.convention.errorcode.BaseErrorCode;
-import com.squirrel.shortLink.admin.common.convention.exception.AbstractException;
+import com.squirrel.common.convention.errorcode.BaseErrorCode;
+import com.squirrel.common.convention.exception.AbstractException;
 
 import java.util.Optional;
 
