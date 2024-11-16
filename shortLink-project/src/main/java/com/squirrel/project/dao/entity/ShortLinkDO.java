@@ -95,6 +95,12 @@ public class ShortLinkDO extends BaseDO {
     private String describe;
 
     /**
+     * 网站标识
+     */
+    @TableField("favicon")
+    private String favicon;
+
+    /**
      * 历史PV
      */
     @TableField("total_pv")
@@ -111,4 +117,10 @@ public class ShortLinkDO extends BaseDO {
      */
     @TableField("total_uip")
     private Integer totalUip;
+
+    /**
+     * 删除时间
+     */
+    @TableField("del_time")
+    private Date del_time;
 }
