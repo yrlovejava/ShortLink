@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.common.convention.exception.ClientException;
+import com.squirrel.shortLink.admin.common.biz.user.UserContext;
 import com.squirrel.shortLink.admin.dao.entity.UserDO;
 import com.squirrel.shortLink.admin.dao.mapper.UserMapper;
 import com.squirrel.shortLink.admin.dto.req.UserLoginReqDTO;
@@ -19,9 +20,11 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -82,9 +85,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + requestParam.getUsername());
         try {
             if (lock.tryLock()) {
-                int inserted = getBaseMapper().insert(BeanUtil.toBean(requestParam, UserDO.class));
-                if (inserted < 1){
-                    throw new ClientException(USER_SAVE_ERROR);
+                try {
+                    int inserted = getBaseMapper().insert(BeanUtil.toBean(requestParam, UserDO.class));
+                    if (inserted < 1){
+                        throw new ClientException(USER_SAVE_ERROR);
+                    }
+                }catch (DuplicateKeyException ex){
+                    throw new ClientException(USER_EXIST);
                 }
                 // 3.在布隆过滤器中保存新的用户名
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
@@ -102,8 +109,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      */
     @Override
     public void update(UserUpdateReqDTO requestParam) {
-        // TODO 验证当前用户名是否为登录用户
-        // 1.修改数据库中数据
+        // 1.验证是否为用户名是否为当前登录用户
+        if (!Objects.equals(requestParam.getUsername(), UserContext.getUsername())) {
+            throw new ClientException("当前登录用户修改请求异常");
+        }
+        // 2.修改数据库中数据
         getBaseMapper().update(
                 BeanUtil.toBean(requestParam,UserDO.class),
                 Wrappers.<UserDO>lambdaUpdate()
