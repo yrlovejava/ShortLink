@@ -156,7 +156,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         IPage<ShortLinkDO> resultPage = getBaseMapper().selectPage(requestParam, queryWrapper);
 
         // 3.返回结果
-        return resultPage.convert(e -> BeanUtil.toBean(e, ShortLinkPageRespDTO.class));
+        return resultPage.convert(e -> {
+            ShortLinkPageRespDTO result = BeanUtil.toBean(e, ShortLinkPageRespDTO.class);
+            result.setDomain("http://" + result.getDomain());
+            return result;
+        });
     }
 
     /**
