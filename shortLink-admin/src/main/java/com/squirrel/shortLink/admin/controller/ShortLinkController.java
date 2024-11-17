@@ -2,7 +2,7 @@ package com.squirrel.shortLink.admin.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.squirrel.common.convention.result.Result;
-import com.squirrel.shortLink.admin.remote.dto.ShortLinkRemoteService;
+import com.squirrel.shortLink.admin.remote.ShortLinkRemoteService;
 import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkCreateRespDTO;

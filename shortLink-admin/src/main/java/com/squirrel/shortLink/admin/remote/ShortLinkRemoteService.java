@@ -1,4 +1,4 @@
-package com.squirrel.shortLink.admin.remote.dto;
+package com.squirrel.shortLink.admin.remote;
 
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
