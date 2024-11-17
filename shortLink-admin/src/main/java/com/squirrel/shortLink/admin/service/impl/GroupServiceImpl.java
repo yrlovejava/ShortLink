@@ -5,12 +5,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.squirrel.common.convention.result.Result;
 import com.squirrel.shortLink.admin.common.biz.user.UserContext;
 import com.squirrel.shortLink.admin.dao.entity.GroupDO;
 import com.squirrel.shortLink.admin.dao.mapper.GroupMapper;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
+import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupRespDTO;
+import com.squirrel.shortLink.admin.remote.ShortLinkRemoteService;
 import com.squirrel.shortLink.admin.service.GroupService;
 import com.squirrel.shortLink.admin.toolkit.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,8 @@ import org.springframework.stereotype.Service;
 
 import javax.swing.*;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 短链接分组接口实现层
@@ -25,6 +30,12 @@ import java.util.List;
 @Slf4j
 @Service
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
+
+    /**
+     * 后续重构为 SpringCloud Feign 调用
+     */
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
+    };
 
     /**
      * 新增分组
@@ -37,6 +48,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         do {
             gid = RandomGenerator.generateRandom();
         }while (!hasGid(gid));
+
+        // 2.插入数据库
         GroupDO groupDO = GroupDO.builder()
                 .name(name)
                 .gid(gid)
@@ -74,8 +87,25 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         // 2.从数据库中查询数据
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
 
-        // 3.返回结果
-        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        // 3.调用远程接口查询短链接分组数量
+        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = shortLinkRemoteService.
+                listGroupShortLinkCount(
+                        groupDOList.stream().map(GroupDO::getGid).toList()
+                );
+
+        // 4.构造返回值
+        // 4.1由数据库中的实体进行属性拷贝
+        List<ShortLinkGroupRespDTO> shortLinkGroupRespDTOList = BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        // 4.2通过stream流设置短链接分组中的数量
+        shortLinkGroupRespDTOList.forEach(s -> {
+            Optional<ShortLinkGroupCountQueryRespDTO> first = listResult.getData().stream()
+                    .filter(item -> Objects.equals(item.getGid(),s.getGid()))
+                    .findFirst();
+            first.ifPresent(item -> s.setShortLinkCount(first.get().getShortLinkCount()));
+        });
+
+        // 5.返回
+        return shortLinkGroupRespDTOList;
     }
 
     /**
