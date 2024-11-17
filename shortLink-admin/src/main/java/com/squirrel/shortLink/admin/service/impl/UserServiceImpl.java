@@ -53,6 +53,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     public UserRespDTO getUserByUsername(String username) {
         // 1.查询数据库
         UserDO userDO = getBaseMapper().selectOne(Wrappers.<UserDO>lambdaQuery()
+                .select(UserDO::getId, UserDO::getUsername,UserDO::getRealName,UserDO::getPhone,UserDO::getMail)
                 .eq(UserDO::getUsername, username));
         if (userDO == null) {
             throw new ClientException(USER_NULL);
@@ -99,7 +100,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
 
                 // 4.保存分组
-                groupService.saveGroup("默认分组");
+                // 这里需要传递用户名是因为注册的时候上下文中还没有用户信息，所以需要传递
+                groupService.saveGroup(requestParam.getUsername(),"默认分组");
                 return;
             }
             throw new ClientException(USER_NAME_EXIST);

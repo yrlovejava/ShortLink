@@ -19,7 +19,6 @@ import com.squirrel.shortLink.admin.toolkit.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.swing.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,35 +38,46 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     /**
      * 新增分组
-     * @param name 分组名
+     * @param groupName 分组名
      */
     @Override
-    public void saveGroup(String name) {
+    public void saveGroup(String groupName) {
+        saveGroup(UserContext.getUsername(), groupName);
+    }
+
+    /**
+     * 新增短链接分组
+     * @param username 用户名
+     * @param groupName 短链接分组名
+     */
+    @Override
+    public void saveGroup(String username, String groupName) {
         // 1.获取分组标识
         String gid;
         do {
             gid = RandomGenerator.generateRandom();
-        }while (!hasGid(gid));
+        }while (!hasGid(username,gid));
 
         // 2.插入数据库
         GroupDO groupDO = GroupDO.builder()
-                .name(name)
+                .name(groupName)
                 .gid(gid)
                 .sortOrder(0)
-                .username(UserContext.getUsername())
+                .username(username)
                 .build();
         getBaseMapper().insert(groupDO);
     }
 
     /**
      * 查找是否存在分组ID
+     * @param username 用户名
      * @param gid 分组ID
      * @return 是否存在
      */
-    private boolean hasGid(String gid) {
+    private boolean hasGid(String username,String gid) {
         return getBaseMapper().selectOne(Wrappers.<GroupDO>lambdaQuery()
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getUsername, Optional.ofNullable(username).orElse(UserContext.getUsername()))
         ) != null;
     }
 
@@ -79,6 +89,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     public List<ShortLinkGroupRespDTO> listGroup() {
         // 1.构造查询条件
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.<GroupDO>lambdaQuery()
+                .select(GroupDO::getGid, GroupDO::getName,GroupDO::getSortOrder)
                 .eq(GroupDO::getDelFlag, 0)
                 .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder)

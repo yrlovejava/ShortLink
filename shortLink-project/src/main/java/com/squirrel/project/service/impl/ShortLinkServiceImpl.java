@@ -124,6 +124,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
         // 1.构建查询条件
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.<ShortLinkDO>lambdaQuery()
+                .select(ShortLinkDO::getId,ShortLinkDO::getDomain,
+                        ShortLinkDO::getShortUri,ShortLinkDO::getFullShortUrl,ShortLinkDO::getOriginUrl,
+                        ShortLinkDO::getGid,ShortLinkDO::getValidDateType,ShortLinkDO::getValidDate,ShortLinkDO::getDescribe,
+                        ShortLinkDO::getFavicon,ShortLinkDO::getCreateTime)
                 .eq(ShortLinkDO::getGid, requestParam.getGid())
                 .eq(ShortLinkDO::getEnableStatus, 0)
                 .eq(ShortLinkDO::getDelFlag, 0)
