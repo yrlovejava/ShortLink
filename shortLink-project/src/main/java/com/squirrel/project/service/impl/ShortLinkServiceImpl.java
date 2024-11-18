@@ -23,6 +23,7 @@ import com.squirrel.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.squirrel.project.dto.resp.ShortLinkPageRespDTO;
 import com.squirrel.project.service.ShortLinkService;
 import com.squirrel.project.toolkit.HashUtil;
+import com.squirrel.project.toolkit.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -106,10 +107,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
         }
 
-        // 5.在布隆过滤器中保存短链接
+        // 5.在redis中保存短链接，采用的是先写数据库再写redis的策略
+        stringRedisTemplate.opsForValue().set(
+                String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
+                requestParam.getOriginUrl(),
+                LinkUtil.getLinkCacheValidTime(requestParam.getValidDate()),
+                TimeUnit.MILLISECONDS
+        );
+
+        // 6.在布隆过滤器中保存短链接
         shortLinkBloomFilter.add(fullShortUrl);
 
-        // 6.返回响应
+        // 7.返回响应
         return ShortLinkCreateRespDTO.builder()
                 .fullShortUrl("http://" + shortLinkDO.getFullShortUrl())
                 .originUrl(requestParam.getOriginUrl())
