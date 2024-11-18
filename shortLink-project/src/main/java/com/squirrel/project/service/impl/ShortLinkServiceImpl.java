@@ -278,11 +278,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 3.查询布隆过滤器，解决缓存穿透问题
         boolean contains = shortLinkBloomFilter.contains(fullShortUrl);
         if (!contains) {
+            // 跳转到短链接不存在页面
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
         // 查询空值，如有空值，那么证明数据库中也不存在，直接返回
         String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
+            // 跳转到短链接不存在页面
+            ((HttpServletResponse) response).sendRedirect("/page/notfound");
             return;
         }
 
@@ -304,6 +308,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             if (shortLinkGotoDO == null) {
                 // 在redis中缓存空值
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY,fullShortUrl),"-",30, TimeUnit.MINUTES);
+                // 跳转到短链接不存在页面
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
                 return;
             }
 
@@ -321,6 +327,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 if (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date())) {
                     // 如果已经过期，在redis中缓存空对象
                     stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY,fullShortUrl),"-",30, TimeUnit.MINUTES);
+                    // 跳转到短链接不存在页面
+                    ((HttpServletResponse) response).sendRedirect("/page/notfound");
                     return;
                 }
                 // 在redis中保存
