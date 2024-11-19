@@ -3,7 +3,9 @@ package com.squirrel.project.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.text.StrBuilder;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -30,10 +32,13 @@ import com.squirrel.project.toolkit.HashUtil;
 import com.squirrel.project.toolkit.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.checkerframework.checker.units.qual.A;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -47,11 +52,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.squirrel.project.common.constant.RedisKeyConstant.*;
 
@@ -388,14 +391,46 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     /**
-     * 统计短链接访问量
+     * 统计短链接uv，pv
      * @param fullShortUrl 完全的短链接
      * @param gid 分组标识
      * @param request http请求
      * @param response http响应
      */
     private void shortLinkStats(String fullShortUrl,String gid,ServletRequest request,ServletResponse response) {
+        // 用于标识这是否当前用户首次访问网站
+        AtomicBoolean uvFirstFlag = new AtomicBoolean();
+        // 获取所有的cookie
+        Cookie[] cookies = ((HttpServletRequest) request).getCookies();
         try {
+            // 定义在resp中添加 uv 的cookie的任务
+            Runnable addResponseCookieTask = () -> {
+                String uv = UUID.fastUUID().toString();
+                Cookie uvCookie = new Cookie("uv", uv);
+                uvCookie.setMaxAge(60 * 60 * 24 * 30);
+                uvCookie.setPath(StrUtil.sub(fullShortUrl,fullShortUrl.indexOf("/"),fullShortUrl.length()));
+                ((HttpServletResponse) response).addCookie(uvCookie);
+                uvFirstFlag.set(Boolean.TRUE);
+                // 在redis的set集合中保存uv，通过uv这个随机字符串的数量来判断独立访客量
+                stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl,uv);
+            };
+            if (ArrayUtil.isNotEmpty(cookies)) {
+                // 查找 uv 的cookie
+                // 如果存在，那么就去redis中查询当前短链接的uv量，如果为0或者null
+                Arrays.stream(cookies)
+                        .filter(e -> Objects.equals(e.getName(),"uv"))
+                        .findFirst()
+                        .map(Cookie::getValue)
+                        .ifPresentOrElse(e -> {
+                            // 在redis中去添加uv，如果返回null或0 证明添加失败，证明set中有这个uv
+                            Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv" + fullShortUrl,e);
+                            // 如果添加成功，那么设置为首次访问
+                            uvFirstFlag.set(added != null && added > 0L);
+                        },addResponseCookieTask);
+            } else {
+                // 直接执行添加uv cookie的任务
+                addResponseCookieTask.run();
+            }
             if(StrUtil.isBlank(gid)){
                 // 1.通过路由表查询分组id
                 ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(Wrappers.<ShortLinkGotoDO>lambdaQuery()
@@ -412,7 +447,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             // 3.构造访问监控实体
             LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
                     .pv(1)
-                    .uv(1)
+                    .uv(uvFirstFlag.get() ? 1 : 0)
                     .uip(1)
                     .hour(hour)
                     .weekday(weekValue)
