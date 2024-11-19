@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.squirrel.common.convention.result.Result;
+import com.squirrel.shortLink.admin.dto.req.RecycleBinRecoverReqDTO;
 import com.squirrel.shortLink.admin.dto.req.RecycleBinSaveReqDTO;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupCountQueryRespDTO;
@@ -98,5 +99,13 @@ public interface ShortLinkRemoteService {
         requestMap.put("size",requestParam.getSize());
         String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", requestMap);
         return JSON.parseObject(resultPageStr, new TypeReference<>() {});
+    }
+
+    /**
+     * 恢复短链接
+     * @param requestParam 恢复短链接参数
+     */
+    default void recoverRecycleBin(RecycleBinRecoverReqDTO requestParam) {
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/recover", JSON.toJSONString(requestParam));
     }
 }

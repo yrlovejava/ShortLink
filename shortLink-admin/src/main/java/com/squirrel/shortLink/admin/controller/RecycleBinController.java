@@ -3,6 +3,7 @@ package com.squirrel.shortLink.admin.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.squirrel.common.convention.result.Result;
 import com.squirrel.common.convention.result.Results;
+import com.squirrel.shortLink.admin.dto.req.RecycleBinRecoverReqDTO;
 import com.squirrel.shortLink.admin.dto.req.RecycleBinSaveReqDTO;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.shortLink.admin.remote.ShortLinkRemoteService;
@@ -44,5 +45,16 @@ public class RecycleBinController {
     @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         return recycleBinService.pageRecycleBinShortLink(requestParam);
+    }
+
+    /**
+     * 恢复短链接
+     * @param requestParam 恢复短链接参数
+     * @return Result<Void>
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/recover")
+    public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam) {
+        shortLinkRemoteService.recoverRecycleBin(requestParam);
+        return Results.success();
     }
 }
