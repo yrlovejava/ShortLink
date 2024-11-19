@@ -61,6 +61,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     /**
      * 创建短链接
+     *
      * @param requestParam 创建短链接请求参数
      * @return 短链接创建信息
      */
@@ -97,13 +98,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             save(shortLinkDO);
             shortLinkGotoMapper.insert(linkGotoDO);
-        }catch (DuplicateKeyException ex){
+        } catch (DuplicateKeyException ex) {
             ShortLinkDO hasShortLinkDO = getBaseMapper().selectOne(
                     Wrappers.<ShortLinkDO>lambdaQuery()
                             .eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
             );
             if (hasShortLinkDO != null) {
-                log.warn("短链接: {} 重复入库",fullShortUrl);
+                log.warn("短链接: {} 重复入库", fullShortUrl);
                 throw new ServiceException("短链接生成重复");
             }
         }
@@ -129,15 +130,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     /**
      * 生成短链接
+     *
      * @param dto 短链接创建的参数
      * @return 短链接
      */
-    private String generateSuffix(ShortLinkCreateReqDTO dto){
+    private String generateSuffix(ShortLinkCreateReqDTO dto) {
         // 1.初始化计数器
         int customGenerateCount = 0;
         String shortUri;
         // 2.确保生成的短链接唯一
-        while (true){
+        while (true) {
             if (customGenerateCount > 10) {
                 throw new ServiceException("短链接频繁生成，请稍后再试");
             }
@@ -155,6 +157,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     /**
      * 分页查询短链接
+     *
      * @param requestParam 短链接查询参数
      * @return 短链接分页返回结果
      */
@@ -162,10 +165,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
         // 1.构建查询条件
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.<ShortLinkDO>lambdaQuery()
-                .select(ShortLinkDO::getId,ShortLinkDO::getDomain,
-                        ShortLinkDO::getShortUri,ShortLinkDO::getFullShortUrl,ShortLinkDO::getOriginUrl,
-                        ShortLinkDO::getGid,ShortLinkDO::getValidDateType,ShortLinkDO::getValidDate,ShortLinkDO::getDescribe,
-                        ShortLinkDO::getFavicon,ShortLinkDO::getCreateTime)
+                .select(ShortLinkDO::getId, ShortLinkDO::getDomain,
+                        ShortLinkDO::getShortUri, ShortLinkDO::getFullShortUrl, ShortLinkDO::getOriginUrl,
+                        ShortLinkDO::getGid, ShortLinkDO::getValidDateType, ShortLinkDO::getValidDate, ShortLinkDO::getDescribe,
+                        ShortLinkDO::getFavicon, ShortLinkDO::getCreateTime)
                 .eq(ShortLinkDO::getGid, requestParam.getGid())
                 .eq(ShortLinkDO::getEnableStatus, 0)
                 .eq(ShortLinkDO::getDelFlag, 0)
@@ -184,8 +187,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     /**
      * 查询短链接分组内数量
+     *
      * @param requestParam 查询参数(分组id的集合)
-     * @return Result<List<ShortLinkGroupCountQueryRespDTO>>
+     * @return Result<List < ShortLinkGroupCountQueryRespDTO>>
      */
     @Override
     public List<ShortLinkGroupCountQueryRespDTO> listGroupShortLinkCount(List<String> requestParam) {
@@ -205,6 +209,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     /**
      * 修改短链接
+     *
      * @param requestParam 修改短链接信息
      */
     @Override
@@ -235,7 +240,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         BeanUtil.copyProperties(shortLinkDO, hasShortLinkDO);
 
         // 4.判断是否修改分组id
-        if (Objects.equals(hasShortLinkDO.getGid(),requestParam.getGid())){
+        if (Objects.equals(hasShortLinkDO.getGid(), requestParam.getGid())) {
             LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.<ShortLinkDO>lambdaUpdate()
                     .eq(ShortLinkDO::getGid, requestParam.getGid())
                     .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
@@ -256,8 +261,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     /**
      * 短链接跳转
+     *
      * @param shortUri 短链接后缀
-     * @param request HTTP 请求
+     * @param request  HTTP 请求
      * @param response HTTP 响应
      */
     @SneakyThrows
@@ -307,7 +313,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             );
             if (shortLinkGotoDO == null) {
                 // 在redis中缓存空值
-                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY,fullShortUrl),"-",30, TimeUnit.MINUTES);
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
                 // 跳转到短链接不存在页面
                 ((HttpServletResponse) response).sendRedirect("/page/notfound");
                 return;
@@ -322,21 +328,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
             // 7.查询数据库中短链接实体
             ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
-            if (shortLinkDO != null) {
-                // 判断是否过期
-                if (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date())) {
-                    // 如果已经过期，在redis中缓存空对象
-                    stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY,fullShortUrl),"-",30, TimeUnit.MINUTES);
-                    // 跳转到短链接不存在页面
-                    ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                    return;
-                }
-                // 在redis中保存
-                stringRedisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY,fullShortUrl),shortLinkDO.getOriginUrl());
-                // 跳转
-                ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
+            // 判断是否过期
+            if (shortLinkDO == null || shortLinkDO.getValidDate().before(new Date())) {
+                // 如果已经过期，在redis中缓存空对象
+                stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
+                // 跳转到短链接不存在页面
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                return;
             }
-        }finally {
+            // 在redis中保存
+            stringRedisTemplate.opsForValue().set(
+                    String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
+                    shortLinkDO.getOriginUrl(),
+                    LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()),
+                    TimeUnit.MILLISECONDS
+            );
+            // 跳转
+            ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
+
+        } finally {
             lock.unlock();
         }
     }
