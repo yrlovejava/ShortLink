@@ -5,6 +5,7 @@ import com.squirrel.common.convention.result.Result;
 import com.squirrel.common.convention.result.Results;
 import com.squirrel.project.dto.req.RecycleBinSaveReqDTO;
 import com.squirrel.project.dto.req.ShortLinkPageReqDTO;
+import com.squirrel.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.project.dto.resp.ShortLinkPageRespDTO;
 import com.squirrel.project.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class RecycleBinController {
      * 分页查询回收站短链接
      */
     @GetMapping("/api/short-link/v1/recycle-bin/page")
-    public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
+    public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         return Results.success(recycleBinService.pageShortLink(requestParam));
     }
 }

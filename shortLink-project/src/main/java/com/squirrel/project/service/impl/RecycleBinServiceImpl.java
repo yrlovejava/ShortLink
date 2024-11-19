@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.project.dao.entity.ShortLinkDO;
 import com.squirrel.project.dao.mapper.ShortLinkMapper;
 import com.squirrel.project.dto.req.RecycleBinSaveReqDTO;
-import com.squirrel.project.dto.req.ShortLinkPageReqDTO;
+import com.squirrel.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.project.dto.resp.ShortLinkPageRespDTO;
 import com.squirrel.project.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
@@ -59,12 +59,17 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
      * @return IPage<ShortLinkPageRespDTO>
      */
     @Override
-    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         // 1.构建查询条件
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.<ShortLinkDO>lambdaQuery()
-                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .select(ShortLinkDO::getId,ShortLinkDO::getDomain,ShortLinkDO::getShortUri,
+                        ShortLinkDO::getGid, ShortLinkDO::getFullShortUrl,ShortLinkDO::getOriginUrl,
+                        ShortLinkDO::getValidDateType,ShortLinkDO::getValidDate,ShortLinkDO::getDescribe,
+                        ShortLinkDO::getFavicon,ShortLinkDO::getCreateTime)
                 .eq(ShortLinkDO::getEnableStatus, 1)
-                .eq(ShortLinkDO::getDelFlag, 0);
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .in(ShortLinkDO::getGid,requestParam.getGidList())
+                .orderByDesc(ShortLinkDO::getUpdateTime);
 
         // 2.分页查询
         IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam,queryWrapper);

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.squirrel.project.dao.entity.ShortLinkDO;
 import com.squirrel.project.dto.req.RecycleBinSaveReqDTO;
 import com.squirrel.project.dto.req.ShortLinkPageReqDTO;
+import com.squirrel.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.project.dto.resp.ShortLinkPageRespDTO;
 
 /**
@@ -24,5 +25,5 @@ public interface RecycleBinService extends IService<ShortLinkDO> {
      * @param requestParam 分页查询短链接参数
      * @return IPage<ShortLinkPageRespDTO>
      */
-    IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam);
+    IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam);
 }
