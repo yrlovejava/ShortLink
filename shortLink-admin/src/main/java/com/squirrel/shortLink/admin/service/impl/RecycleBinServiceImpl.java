@@ -15,7 +15,6 @@ import com.squirrel.shortLink.admin.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.swing.*;
 import java.util.List;
 
 /**

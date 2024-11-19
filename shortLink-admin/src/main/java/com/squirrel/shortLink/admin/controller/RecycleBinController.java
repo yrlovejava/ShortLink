@@ -6,7 +6,6 @@ import com.squirrel.common.convention.result.Results;
 import com.squirrel.shortLink.admin.dto.req.RecycleBinSaveReqDTO;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.shortLink.admin.remote.ShortLinkRemoteService;
-import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import com.squirrel.shortLink.admin.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
