@@ -1,6 +1,8 @@
 package com.squirrel.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.Week;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -11,8 +13,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.common.convention.exception.ClientException;
 import com.squirrel.common.convention.exception.ServiceException;
+import com.squirrel.project.dao.entity.LinkAccessStatsDO;
 import com.squirrel.project.dao.entity.ShortLinkDO;
 import com.squirrel.project.dao.entity.ShortLinkGotoDO;
+import com.squirrel.project.dao.mapper.LinkAccessStatsMapper;
 import com.squirrel.project.dao.mapper.ShortLinkGotoMapper;
 import com.squirrel.project.dao.mapper.ShortLinkMapper;
 import com.squirrel.project.dto.req.ShortLinkCreateReqDTO;
@@ -63,6 +67,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final ShortLinkGotoMapper shortLinkGotoMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
+    private final LinkAccessStatsMapper linkAccessStatsMapper;
 
     /**
      * 创建短链接
@@ -304,6 +309,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 2.在redis中查询跳转表
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(originalLink)) {
+            // 记录返回量
+            shortLinkStats(fullShortUrl,null,request,response);
             // 跳转
             ((HttpServletResponse) response).sendRedirect(originalLink);
             return;
@@ -371,11 +378,54 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()),
                     TimeUnit.MILLISECONDS
             );
+            // 记录访问量
+            shortLinkStats(fullShortUrl,shortLinkDO.getGid(),request,response);
             // 跳转
             ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
-
         } finally {
             lock.unlock();
+        }
+    }
+
+    /**
+     * 统计短链接访问量
+     * @param fullShortUrl 完全的短链接
+     * @param gid 分组标识
+     * @param request http请求
+     * @param response http响应
+     */
+    private void shortLinkStats(String fullShortUrl,String gid,ServletRequest request,ServletResponse response) {
+        try {
+            if(StrUtil.isBlank(gid)){
+                // 1.通过路由表查询分组id
+                ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(Wrappers.<ShortLinkGotoDO>lambdaQuery()
+                        .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl)
+                );
+                gid = shortLinkGotoDO.getGid();
+            }
+
+            // 2.获取当前的时间，日期
+            int hour = DateUtil.hour(new Date(),true);
+            Week week = DateUtil.dayOfWeekEnum(new Date());
+            int weekValue = week.getIso8601Value();
+
+            // 3.构造访问监控实体
+            LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
+                    .pv(1)
+                    .uv(1)
+                    .uip(1)
+                    .hour(hour)
+                    .weekday(weekValue)
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .build();
+
+            // 4.插入数据库
+            // TODO: 频繁插入数据库，对数据库压力很大，这里需要优化
+            linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+        }catch (Throwable ex) {
+            log.error("短链接访问量统计异常",ex);
         }
     }
 }
