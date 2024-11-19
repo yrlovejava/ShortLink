@@ -391,13 +391,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     /**
-     * 统计短链接uv，pv
+     * 统计短链接uv，pv，uip
      * @param fullShortUrl 完全的短链接
      * @param gid 分组标识
      * @param request http请求
      * @param response http响应
      */
     private void shortLinkStats(String fullShortUrl,String gid,ServletRequest request,ServletResponse response) {
+        // 1.UV计算
         // 用于标识这是否当前用户首次访问网站
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
         // 获取所有的cookie
@@ -423,32 +424,41 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .map(Cookie::getValue)
                         .ifPresentOrElse(e -> {
                             // 在redis中去添加uv，如果返回null或0 证明添加失败，证明set中有这个uv
-                            Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv" + fullShortUrl,e);
+                            Long uvAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uv" + fullShortUrl,e);
                             // 如果添加成功，那么设置为首次访问
-                            uvFirstFlag.set(added != null && added > 0L);
+                            uvFirstFlag.set(uvAdded != null && uvAdded > 0L);
                         },addResponseCookieTask);
             } else {
                 // 直接执行添加uv cookie的任务
                 addResponseCookieTask.run();
             }
+
+            // 2.UIP计算
+            // 获取用户真实的ip
+            String remoteAddr = LinkUtil.getActualIp((HttpServletRequest) request);
+            // 在redis中尝试添加
+            Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, remoteAddr);
+            boolean uipFirstFlag = uipAdded != null && uipAdded > 0L;
+
+            // 3.PV计算
             if(StrUtil.isBlank(gid)){
-                // 1.通过路由表查询分组id
+                // 通过路由表查询分组id
                 ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(Wrappers.<ShortLinkGotoDO>lambdaQuery()
                         .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl)
                 );
                 gid = shortLinkGotoDO.getGid();
             }
 
-            // 2.获取当前的时间，日期
+            // 获取当前的时间，日期
             int hour = DateUtil.hour(new Date(),true);
             Week week = DateUtil.dayOfWeekEnum(new Date());
             int weekValue = week.getIso8601Value();
 
-            // 3.构造访问监控实体
+            // 构造访问监控实体
             LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
                     .pv(1)
                     .uv(uvFirstFlag.get() ? 1 : 0)
-                    .uip(1)
+                    .uip(uipFirstFlag ? 1 : 0)
                     .hour(hour)
                     .weekday(weekValue)
                     .fullShortUrl(fullShortUrl)
@@ -456,7 +466,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
 
-            // 4.插入数据库
+            // 插入数据库
             // TODO: 频繁插入数据库，对数据库压力很大，这里需要优化
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
         }catch (Throwable ex) {
