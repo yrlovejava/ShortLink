@@ -18,14 +18,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.common.convention.exception.ClientException;
 import com.squirrel.common.convention.exception.ServiceException;
-import com.squirrel.project.dao.entity.LinkAccessStatsDO;
-import com.squirrel.project.dao.entity.LinkLocaleStatsDO;
-import com.squirrel.project.dao.entity.ShortLinkDO;
-import com.squirrel.project.dao.entity.ShortLinkGotoDO;
-import com.squirrel.project.dao.mapper.LinkAccessStatsMapper;
-import com.squirrel.project.dao.mapper.LinkLocaleStatsMapper;
-import com.squirrel.project.dao.mapper.ShortLinkGotoMapper;
-import com.squirrel.project.dao.mapper.ShortLinkMapper;
+import com.squirrel.project.dao.entity.*;
+import com.squirrel.project.dao.mapper.*;
 import com.squirrel.project.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.project.dto.req.ShortLinkPageReqDTO;
 import com.squirrel.project.dto.req.ShortLinkUpdateReqDTO;
@@ -78,6 +72,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
@@ -408,6 +403,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      * @param response http响应
      */
     private void shortLinkStats(String fullShortUrl,String gid,ServletRequest request,ServletResponse response) {
+        // TODO: 频繁插入数据库，对数据库压力很大，这里需要优化
         // 1.UV计算
         // 用于标识这是否当前用户首次访问网站
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
@@ -477,7 +473,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .build();
 
             // 插入数据库
-            // TODO: 频繁插入数据库，对数据库压力很大，这里需要优化
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
 
             // 4.统计地方访问数据
@@ -505,6 +500,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .build();
                 // 插入数据库
                 linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+
+                // 5.统计操作系统访问数据
+                LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                        .os(LinkUtil.getOs((HttpServletRequest) request))
+                        .cnt(1)
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
             }
         }catch (Throwable ex) {
             log.error("短链接访问量统计异常",ex);
