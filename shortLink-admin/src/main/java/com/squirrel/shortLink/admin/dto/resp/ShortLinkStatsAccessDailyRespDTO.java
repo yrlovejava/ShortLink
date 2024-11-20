@@ -1,4 +1,4 @@
-package com.squirrel.project.dto.resp;
+package com.squirrel.shortLink.admin.dto.resp;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -14,7 +14,8 @@ public class ShortLinkStatsAccessDailyRespDTO {
     /**
      * 日期
      */
-    private String date;
+    @JsonFormat(pattern = "yyyy-MM-dd",timezone = "GMT+8")
+    private Date date;
 
     /**
      * 访问量
