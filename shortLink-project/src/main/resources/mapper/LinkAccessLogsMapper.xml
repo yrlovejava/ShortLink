@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.squirrel.project.dao.mapper.LinkAccessLogsMapper">
+
+    <select id="findUvTypeCntByShortLink" resultType="java.util.HashMap">
+        select
+            sum(old_user) as oldUserCnt,
+            sum(new_user) as newUserCnt
+        from (
+        select
+        case when count(DISTINCT DATE(create_time)) > 1 then 1 else 0 end as old_user,
+        case when count(DISTINCT DATE(create_time)) = 1
+                      and max(create_time) >= #{param.startDate}
+                      and max(create_time) <= #{param.endDate}
+                      then 1 else 0 end as new_user
+        from t_link_access_logs
+        where full_short_url = #{param.fullShortUrl}
+        group by user
+        ) as user_counts
+    </select>
+</mapper>
