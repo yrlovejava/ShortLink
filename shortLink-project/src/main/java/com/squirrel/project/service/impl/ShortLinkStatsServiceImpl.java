@@ -4,11 +4,12 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
-import com.squirrel.project.dao.entity.LinkAccessStatsDO;
-import com.squirrel.project.dao.entity.LinkDeviceStatsDO;
-import com.squirrel.project.dao.entity.LinkLocaleStatsDO;
-import com.squirrel.project.dao.entity.LinkNetworkStatsDO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.squirrel.project.dao.entity.*;
 import com.squirrel.project.dao.mapper.*;
+import com.squirrel.project.dto.req.ShortLinkStatsAccessRecordReqDTO;
 import com.squirrel.project.dto.req.ShortLinkStatsReqDTO;
 import com.squirrel.project.dto.resp.*;
 import com.squirrel.project.service.ShortLinkStatsService;
@@ -273,5 +274,53 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 .deviceStats(deviceStats)
                 .networkStats(networkStats)
                 .build();
+    }
+
+    /**
+     * 访问单个短链接指定时间内访问记录监控数据
+     * @param requestParam 获取短链接监控访问记录数据入参
+     * @return 访问记录监控数据
+     */
+    @Override
+    public IPage<ShortLinkStatsAccessRecordRespDTO> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        // 1.构造查询条件
+        LambdaQueryWrapper<LinkAccessLogsDO> queryWrapper = Wrappers.<LinkAccessLogsDO>lambdaQuery()
+                .eq(LinkAccessLogsDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .between(LinkAccessLogsDO::getCreateTime, requestParam.getStartDate(), requestParam.getEndDate())
+                .eq(LinkAccessLogsDO::getDelFlag, 0)
+                .orderByDesc(LinkAccessLogsDO::getCreateTime);
+
+        // 2.分页查询数据库
+        IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectPage(requestParam, queryWrapper);
+
+        // 3.转换为需要返回的数据
+        IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
+
+        // 4.遍历记录获取用户名
+        List<String> userAccessLogsList = actualResult.getRecords().stream()
+                .map(ShortLinkStatsAccessRecordRespDTO::getUser)
+                .toList();
+
+        // 5.查询用户记录和是否为新旧用户
+        List<Map<String, Object>> ubTypeList = linkAccessLogsMapper.selectUvTypeByUsers(
+                requestParam.getFullShortUrl(),
+                requestParam.getStartDate(),
+                requestParam.getEndDate(),
+                userAccessLogsList
+        );
+
+        // 6.处理数据
+        actualResult.getRecords().forEach(e -> {
+            String uvType = ubTypeList.stream()
+                    .filter(item -> Objects.equals(e.getUser(),item.get("user")))
+                    .findFirst()
+                    .map(item -> item.get("UvType"))
+                    .map(Objects::toString)
+                    .orElse("旧访客");
+            e.setUvType(uvType);
+        });
+
+        // 7.返回处理后的数据
+        return actualResult;
     }
 }

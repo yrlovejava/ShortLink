@@ -18,4 +18,20 @@
         group by user
         ) as user_counts
     </select>
+
+    <select id="selectUvTypeByUsers" resultType="java.util.Map">
+        select user,
+               case
+                   when min(create_time) between #{startDate} and #{endDate}
+                   then '新访客'
+                   else '老访客'
+               end as uvType
+        from t_link_access_logs
+        where full_short_url = #{fullShortUrl}
+        and user in
+        <foreach item="item" index="index" collection="userAccessLogsList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        group by user
+    </select>
 </mapper>
