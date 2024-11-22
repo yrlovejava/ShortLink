@@ -2,6 +2,7 @@ package com.squirrel.project.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.squirrel.project.dao.entity.LinkAccessLogsDO;
+import com.squirrel.project.dao.entity.LinkAccessStatsDO;
 import com.squirrel.project.dto.req.ShortLinkStatsReqDTO;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
@@ -52,4 +53,18 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             @Param("endDate") String endDate,
             @Param("userAccessLogsList") List<String> userAccessLogsList
     );
+
+    /**
+     * 根据短链接获取指定日期内PV，UV，UIP数据
+     * @param requestParam 短链接
+     * @return pv，uv，uip
+     */
+    @Select("select " +
+            "count(user) as pv," +
+            "count(distinct user) as uv," +
+            "count(distinct ip) as uip " +
+            "from t_link_access_logs " +
+            "where full_short_url = #{param.fullShortUrl} " +
+            "and create_time between #{param.startDate} and #{param.endDate}")
+    LinkAccessStatsDO findPvUvUipStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 }
