@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.squirrel.project.dao.mapper.LinkStatsTodayMapper">
+
+    <insert id="shortLinkTodayState">
+        insert into t_link_stats_today
+        (full_short_url, date, today_pv, today_uv, today_uip, create_time, update_time, del_flag)
+        values
+        (#{linkTodayStats.fullShortUrl}, #{linkTodayStats.date}, #{linkTodayStats.todayUv}, #{linkTodayStats.todayPv}, #{linkTodayStats.todayUip}, NOW(), NOW(), 0)
+        ON DUPLICATE KEY UPDATE
+        today_uv = today_uv + #{linkTodayStats.todayUv},
+        today_pv = today_pv + #{linkTodayStats.todayPv},
+        today_uip = today_uip + #{linkTodayStats.todayUip}
+    </insert>
+</mapper>
