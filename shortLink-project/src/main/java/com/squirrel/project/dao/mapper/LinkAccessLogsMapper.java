@@ -3,6 +3,7 @@ package com.squirrel.project.dao.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.squirrel.project.dao.entity.LinkAccessLogsDO;
 import com.squirrel.project.dao.entity.LinkAccessStatsDO;
+import com.squirrel.project.dto.req.ShortLinkGroupStatsReqDTO;
 import com.squirrel.project.dto.req.ShortLinkStatsReqDTO;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
@@ -67,4 +68,26 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "where full_short_url = #{param.fullShortUrl} " +
             "and create_time between #{param.startDate} and #{param.endDate}")
     LinkAccessStatsDO findPvUvUipStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
+
+    /**
+     * 根据分组获取指定日期内高频访问IP数据
+     * @param requestParam 分组短链接信息
+     * @return 高频IP数据
+     */
+    @Select("select ip,count(ip) as count " +
+            "from t_link_access_logs " +
+            "where create_time between #{param.startDate} and #{param.endDate} " +
+            "group by ip " +
+            "order by count desc " +
+            "limit 5")
+    List<HashMap<String,Object>> listTopIpByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
+
+    /**
+     * 根据分组获取指定日期内PV,UV,UIP数据
+     * @param requestParam 分组短链接信息
+     * @return PV,UV,UIP
+     */
+    @Select("select * from t_link_access_logs " +
+            "where create_time between #{param.startDate} and #{param.endDate}")
+    LinkAccessStatsDO findPvUvUipStatsByGroup(@Param("param")ShortLinkGroupStatsReqDTO requestParam);
 }

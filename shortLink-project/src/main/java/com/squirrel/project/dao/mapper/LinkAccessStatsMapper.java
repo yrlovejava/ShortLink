@@ -2,6 +2,7 @@ package com.squirrel.project.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.squirrel.project.dao.entity.LinkAccessStatsDO;
+import com.squirrel.project.dto.req.ShortLinkGroupStatsReqDTO;
 import com.squirrel.project.dto.req.ShortLinkStatsReqDTO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -32,8 +33,18 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
     List<LinkAccessStatsDO> listStatsByShortLink(@Param("param")ShortLinkStatsReqDTO reqDTO);
 
     /**
+     * 根据分组获取指定日期内基础监控数据
+     * @param requestParam 分组短链接信息
+     * @return List<LinkAccessStatsDO>
+     */
+    @Select("select * from t_link_access_stats " +
+            "where date between #{param.startDate} and #{endDate} " +
+            "group by date")
+    List<LinkAccessStatsDO> listStatsByGroup(@Param("param")ShortLinkGroupStatsReqDTO requestParam);
+
+    /**
      * 根据短链接获取指定日期内小时基础监控数据
-     * @param reqDTO 查询参数
+     * @param requestParam 查询参数
      * @return 监控数据
      */
     @Select("select hour,sum(pv) as pv " +
@@ -41,7 +52,17 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
             "where full_short_url = #{param.fullShortUrl} " +
             "and date between #{param.startDate} and #{param.endDate} " +
             "group by full_short_url,hour")
-    List<LinkAccessStatsDO> listHourStatsByShortLink(@Param("param") ShortLinkStatsReqDTO reqDTO);
+    List<LinkAccessStatsDO> listHourStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
+
+    /**
+     * 根据分组获取指定日期小时基础监控数据
+     * @param requestParam 分组短链接信息
+     * @return List<LinkAccessStatsDO>
+     */
+    @Select("select hour,sum(pv) as pv from t_link_access_stats " +
+            "where date between #{param.startDate} and #{param.endDate} " +
+            "group by hour")
+    List<LinkAccessStatsDO> listHourStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
      * 根据短链接获取指定日期内星期基础监控数据
@@ -54,4 +75,14 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
             "and date between #{param.startDate} and #{param.endDate} " +
             "group by full_short_url,weekday")
     List<LinkAccessStatsDO> listWeekdayStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
+
+    /**
+     * 根据分组获取指定日期小时基础监控数据
+     * @param requestParam 分组短链接信息
+     * @return List<LinkAccessStatsDO>
+     */
+    @Select("select weekday,sum(pv) as pv from t_link_access_stats " +
+            "where date between #{param.startDate} and #{param.endDate} " +
+            "group by weekday")
+    List<LinkAccessStatsDO> listWeekdayStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }

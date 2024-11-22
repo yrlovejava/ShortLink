@@ -2,6 +2,7 @@ package com.squirrel.project.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.squirrel.project.dao.entity.LinkOsStatsDO;
+import com.squirrel.project.dto.req.ShortLinkGroupStatsReqDTO;
 import com.squirrel.project.dto.req.ShortLinkStatsReqDTO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -31,4 +32,15 @@ public interface LinkOsStatsMapper extends BaseMapper<LinkOsStatsDO> {
             "and date between #{param.startDate} and #{param.endDate} " +
             "group by full_short_url,os")
     List<HashMap<String,Object>> listOsStatsByShortLink(@Param("param")ShortLinkStatsReqDTO requestParam);
+
+    /**
+     * 根据分组获取指定日期内操作系统监控数据
+     * @param requestParam 分组信息
+     * @return 操作系统监控数据
+     */
+    @Select("select os,sum(cnt) as count " +
+            "from t_link_os_stats " +
+            "where date between #{param.startDate} and #{param.endDate} " +
+            "group by os")
+    List<HashMap<String, Object>> listOsStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }

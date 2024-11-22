@@ -2,6 +2,7 @@ package com.squirrel.project.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.squirrel.project.dao.entity.LinkNetworkStatsDO;
+import com.squirrel.project.dto.req.ShortLinkGroupStatsReqDTO;
 import com.squirrel.project.dto.req.ShortLinkStatsReqDTO;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.apache.ibatis.annotations.Select;
@@ -30,4 +31,15 @@ public interface LinkNetworkStatsMapper extends BaseMapper<LinkNetworkStatsDO> {
             "and date between #{param.startDate} and #{param.endDate} " +
             "group by full_short_url,network")
     List<LinkNetworkStatsDO> listNetworkStatsByShortLink(@Param("param")ShortLinkStatsReqDTO requestParam);
+
+    /**
+     * 根据分组获取指定日期内访问网络监控数据
+     * @param requestParam 分组信息
+     * @return 网络监控数据
+     */
+    @Select("select network,sum(cnt) as count " +
+            "from t_link_network_stats " +
+            "where date between #{param.startDate} and #{param.endDate} " +
+            "group by network")
+    List<LinkNetworkStatsDO> listNetworkStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }
