@@ -17,7 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName("t_link_access_stats")
-public class LinkAccessLogsDO extends BaseDO {
+public class LinkAccessStatsDO extends BaseDO {
 
     /**
      * id
