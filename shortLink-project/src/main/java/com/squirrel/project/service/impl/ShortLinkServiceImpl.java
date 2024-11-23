@@ -20,12 +20,11 @@ import com.squirrel.common.convention.exception.ClientException;
 import com.squirrel.common.convention.exception.ServiceException;
 import com.squirrel.project.dao.entity.*;
 import com.squirrel.project.dao.mapper.*;
+import com.squirrel.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.squirrel.project.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.project.dto.req.ShortLinkPageReqDTO;
 import com.squirrel.project.dto.req.ShortLinkUpdateReqDTO;
-import com.squirrel.project.dto.resp.ShortLinkCreateRespDTO;
-import com.squirrel.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
-import com.squirrel.project.dto.resp.ShortLinkPageRespDTO;
+import com.squirrel.project.dto.resp.*;
 import com.squirrel.project.service.ShortLinkService;
 import com.squirrel.project.toolkit.HashUtil;
 import com.squirrel.project.toolkit.LinkUtil;
@@ -156,6 +155,45 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .fullShortUrl("http://" + shortLinkDO.getFullShortUrl())
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
+                .build();
+    }
+
+    /**
+     * 批量创建短链接
+     * @param requestParam 批量短链接创建请求
+     * @return 批量创建响应
+     */
+    @Override
+    public ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam) {
+        // 1.获取所有的原始链接
+        List<String> originUrls = requestParam.getOriginUrls();
+        // 2.获取所有的描述
+        List<String> describes = requestParam.getDescribes();
+
+        // 3.解析请求参数中的信息，封装为创建单个短链接的DTO
+        List<ShortLinkBaseInfoRespDTO> result = new ArrayList<>();
+        for (int i = 0; i < originUrls.size(); i++) {
+            ShortLinkCreateReqDTO shortLinkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLinkCreateReqDTO.class);
+            shortLinkCreateReqDTO.setOriginUrl(originUrls.get(i));
+            shortLinkCreateReqDTO.setDescribe(describes.get(i));
+            try {
+                // 4.调用本地方法，保存到数据库
+                ShortLinkCreateRespDTO shortLink = createShortLink(shortLinkCreateReqDTO);
+                ShortLinkBaseInfoRespDTO linkBaseInfoRespDTO = ShortLinkBaseInfoRespDTO.builder()
+                        .fullShortUrl(shortLink.getFullShortUrl())
+                        .originUrl(shortLink.getOriginUrl())
+                        .describe(describes.get(i))
+                        .build();
+                // 5.在响应结果集中添加响应
+                result.add(linkBaseInfoRespDTO);
+            } catch (Throwable ex) {
+                log.error("批量创建短链接失败，原始参数：{}", originUrls.get(i));
+            }
+        }
+        // 6.返回响应数据
+        return ShortLinkBatchCreateRespDTO.builder()
+                .total(result.size())
+                .baseLinkInfos(result)
                 .build();
     }
 

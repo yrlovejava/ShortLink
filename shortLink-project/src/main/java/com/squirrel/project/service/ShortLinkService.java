@@ -3,9 +3,11 @@ package com.squirrel.project.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.squirrel.project.dao.entity.ShortLinkDO;
+import com.squirrel.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.squirrel.project.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.project.dto.req.ShortLinkPageReqDTO;
 import com.squirrel.project.dto.req.ShortLinkUpdateReqDTO;
+import com.squirrel.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.squirrel.project.dto.resp.ShortLinkCreateRespDTO;
 import com.squirrel.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.squirrel.project.dto.resp.ShortLinkPageRespDTO;
@@ -53,4 +55,11 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * @param response HTTP 响应
      */
     void restoreUrl(String shortUri, ServletRequest request, ServletResponse response);
+
+    /**
+     * 批量创建短链接
+     * @param requestParam 批量短链接创建请求
+     * @return 批量创建响应
+     */
+    ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam);
 }

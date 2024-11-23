@@ -10,9 +10,11 @@ import com.squirrel.shortLink.admin.dto.req.*;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkStatsAccessRecordRespDTO;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkStatsRespDTO;
+import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkBatchCreateReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkUpdateReqDTO;
+import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 
@@ -167,6 +169,18 @@ public interface ShortLinkRemoteService {
         stringObjectMap.remove("orders");
         stringObjectMap.remove("records");
         String resultBodyStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats/access-record/group", stringObjectMap);
+        return JSON.parseObject(resultBodyStr, new TypeReference<>() {
+        });
+    }
+
+    /**
+     * 批量创建短链接
+     *
+     * @param requestParam 批量创建短链接请求参数
+     * @return 短链接批量创建响应
+     */
+    default Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam) {
+        String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/create/batch", JSON.toJSONString(requestParam));
         return JSON.parseObject(resultBodyStr, new TypeReference<>() {
         });
     }
