@@ -90,4 +90,20 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
     @Select("select * from t_link_access_logs " +
             "where create_time between #{param.startDate} and #{param.endDate}")
     LinkAccessStatsDO findPvUvUipStatsByGroup(@Param("param")ShortLinkGroupStatsReqDTO requestParam);
+
+    /**
+     * 获取分组用户信息和是否为新老访客
+     * @param gid 分组id
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @param userAccessLogsList 用户名集合
+     * @return 分组用户信息和是否为新老访客
+     */
+    @MapKey("user")
+    List<Map<String, Object>> selectGroupUvTypeByUsers(
+            @Param("gid") String gid,
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate,
+            @Param("userAccessLogsList") List<String> userAccessLogsList
+    );
 }

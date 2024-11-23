@@ -1,6 +1,7 @@
 package com.squirrel.project.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.squirrel.project.dto.req.ShortLinkGroupStatsAccessRecordReqDTO;
 import com.squirrel.project.dto.req.ShortLinkGroupStatsReqDTO;
 import com.squirrel.project.dto.req.ShortLinkStatsAccessRecordReqDTO;
 import com.squirrel.project.dto.req.ShortLinkStatsReqDTO;
@@ -32,4 +33,11 @@ public interface ShortLinkStatsService {
      * @return 监控数据
      */
     ShortLinkStatsRespDTO groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam);
+
+    /**
+     * 访问分组短链接指定时间内访问记录监控数据
+     * @param requestParam 分组短链接信息
+     * @return 监控数据
+     */
+    IPage<ShortLinkStatsAccessRecordRespDTO> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam);
 }
