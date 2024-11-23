@@ -30,7 +30,7 @@ public interface LinkBrowserStatsMapper extends BaseMapper<LinkBrowserStatsDO> {
             "from t_link_browser_stats " +
             "where full_short_url = #{param.fullShortUrl} " +
             "and date between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,date,browser")
+            "group by full_short_url,browser")
     List<HashMap<String, Object>> listBrowserStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -41,6 +41,6 @@ public interface LinkBrowserStatsMapper extends BaseMapper<LinkBrowserStatsDO> {
     @Select("select browser,sum(cnt) as count " +
             "from t_link_browser_stats " +
             "where date between #{param.startDate} and #{param.endDate} " +
-            "group by date,browser")
+            "group by browser")
     List<HashMap<String,Object>> listBrowserStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }

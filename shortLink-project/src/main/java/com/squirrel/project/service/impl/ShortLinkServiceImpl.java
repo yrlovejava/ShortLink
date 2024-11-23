@@ -427,7 +427,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             // 7.查询数据库中短链接实体
             ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
             // 判断是否过期
-            if (shortLinkDO == null || shortLinkDO.getValidDate().before(new Date())) {
+            if (shortLinkDO == null || (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date()))) {
                 // 如果已经过期，在redis中缓存空对象
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
                 // 跳转到短链接不存在页面
