@@ -18,6 +18,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.common.convention.exception.ClientException;
 import com.squirrel.common.convention.exception.ServiceException;
+import com.squirrel.project.common.enums.VailDateTypeEnum;
 import com.squirrel.project.dao.entity.*;
 import com.squirrel.project.dao.mapper.*;
 import com.squirrel.project.dto.req.ShortLinkBatchCreateReqDTO;
@@ -347,6 +348,22 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             // TODO: 这里需要通过加锁保证原子性
             baseMapper.delete(updateWrapper);
             baseMapper.insert(shortLinkDO);
+        }
+
+        // 5.如果需要修改日期和有效时间类型，那么就要同步redis，这里采取的是删缓存
+        if (!Objects.equals(hasShortLinkDO.getValidDateType(), requestParam.getValidDateType()) // 这表明需要修改有效日期
+                || !Objects.equals(hasShortLinkDO.getValidDate(), requestParam.getValidDate()) // 这表明需要修改日期
+        ) {
+            // 先删除有效链接缓存
+            stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+            // 如果数据库中短链接有效日期在当前时间之前，即已过期(因为只有过期短链接才会有空对象的缓存)
+            if (hasShortLinkDO.getValidDate() != null && hasShortLinkDO.getValidDate().before(new Date())) {
+                // 如果已经过期了，但是有效日期类型改成了永久的，或者有效日期改成了当前时间之后
+                if (Objects.equals(requestParam.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()) || requestParam.getValidDate().after(new Date())) {
+                    // 那么就需要删除空对象缓存
+                    stringRedisTemplate.delete(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+                }
+            }
         }
     }
 
