@@ -19,6 +19,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.common.convention.exception.ClientException;
 import com.squirrel.common.convention.exception.ServiceException;
 import com.squirrel.project.common.enums.VailDateTypeEnum;
+import com.squirrel.project.config.GotoDomainWhiteListConfiguration;
 import com.squirrel.project.dao.entity.*;
 import com.squirrel.project.dao.mapper.*;
 import com.squirrel.project.dto.biz.ShortLinkStatsRecordDTO;
@@ -80,6 +81,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
+    private final GotoDomainWhiteListConfiguration gotoDomainWhiteListConfiguration;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
@@ -95,6 +97,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      */
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
+        // 验证白名单
+        verificationWhiteList(requestParam.getOriginUrl());
         // 1.获取短链接
         String shortLinkSuffix = generateSuffix(requestParam);
         String fullShortUrl = StrBuilder.create(createShortLinkDefaultDomain)
@@ -158,6 +162,30 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
                 .build();
+    }
+
+    /**
+     * 验证白名单
+     * @param originUrl 原始链接
+     */
+    private void verificationWhiteList(String originUrl) {
+        // 是否开启白名单
+        Boolean enable = gotoDomainWhiteListConfiguration.getEnable();
+        // 如果不开启，直接返回
+        if (enable == null || Boolean.FALSE.equals(enable)) {
+            return;
+        }
+        // 获取域名
+        String domain = LinkUtil.extractDomain(originUrl);
+        if (StrUtil.isBlank(domain)) {
+            throw new ClientException("跳转链接填写错误");
+        }
+        // 获取可跳转的原始域名
+        List<String> details = gotoDomainWhiteListConfiguration.getDetails();
+        if (!details.contains(domain)) {
+            // 如果不包含
+            throw new ClientException("演示环境为了避免恶意攻击，请生成一下网站跳转链接: " + gotoDomainWhiteListConfiguration.getNames());
+        }
     }
 
     /**
@@ -308,6 +336,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
+        // 验证白名单
+        verificationWhiteList(requestParam.getOriginUrl());
         // 1.构造查询条件
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.<ShortLinkDO>lambdaQuery()
                 .eq(ShortLinkDO::getGid, requestParam.getGid())
