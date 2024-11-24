@@ -122,7 +122,7 @@ public class ShortLinkDO extends BaseDO {
      * 删除时间
      */
     @TableField("del_time")
-    private Date del_time;
+    private Long delTime;
 
     /**
      * 今日PV

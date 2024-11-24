@@ -21,6 +21,7 @@ import com.squirrel.common.convention.exception.ServiceException;
 import com.squirrel.project.common.enums.VailDateTypeEnum;
 import com.squirrel.project.dao.entity.*;
 import com.squirrel.project.dao.mapper.*;
+import com.squirrel.project.dto.biz.ShortLinkStatsRecordDTO;
 import com.squirrel.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.squirrel.project.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.project.dto.req.ShortLinkPageReqDTO;
@@ -389,7 +390,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 2.在redis中查询跳转表
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(originalLink)) {
-            // 记录返回量
+            // 记录访问量
             shortLinkStats(fullShortUrl,null,request,response);
             // 跳转
             ((HttpServletResponse) response).sendRedirect(originalLink);
@@ -474,7 +475,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
      * @param request http请求
      * @param response http响应
      */
-    private void shortLinkStats(String fullShortUrl,String gid,ServletRequest request,ServletResponse response) {
+    public void shortLinkStats(String fullShortUrl,String gid,ServletRequest request,ServletResponse response) {
         // TODO: 频繁插入数据库，对数据库压力很大，这里需要优化
         // 1.UV计算
         // 用于标识这是否当前用户首次访问网站
@@ -649,5 +650,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }catch (Throwable ex) {
             log.error("短链接访问量统计异常",ex);
         }
+    }
+
+    @Override
+    public void shortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO shortLinkStatsRecordDTO) {
+
     }
 }
