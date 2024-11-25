@@ -1,10 +1,12 @@
 package com.squirrel.shortLink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.squirrel.common.convention.exception.ClientException;
 import com.squirrel.common.convention.result.Result;
 import com.squirrel.shortLink.admin.common.biz.user.UserContext;
 import com.squirrel.shortLink.admin.dao.entity.GroupDO;
@@ -16,19 +18,32 @@ import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.squirrel.shortLink.admin.remote.ShortLinkRemoteService;
 import com.squirrel.shortLink.admin.service.GroupService;
 import com.squirrel.shortLink.admin.toolkit.RandomGenerator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.Group;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.squirrel.shortLink.admin.common.constant.RedisCacheConstant.LOCK_GROUP_CREATE_KEY;
+
 /**
  * 短链接分组接口实现层
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
+
+    private final RedissonClient redissonClient;
+
+    @Value("${short-link.group.max-num}")
+    private Integer groupMaxNum;
 
     /**
      * 后续重构为 SpringCloud Feign 调用
@@ -52,20 +67,35 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
      */
     @Override
     public void saveGroup(String username, String groupName) {
-        // 1.获取分组标识
-        String gid;
-        do {
-            gid = RandomGenerator.generateRandom();
-        }while (!hasGid(username,gid));
+        // 1.加锁
+        RLock lock = redissonClient.getLock(String.format(LOCK_GROUP_CREATE_KEY, username));
+        lock.lock();
+        try {
+            // 2.查询数据库中分组数量
+            List<GroupDO> groupDOList = baseMapper.selectList(Wrappers.<GroupDO>lambdaQuery()
+                    .eq(GroupDO::getUsername, username)
+                    .eq(GroupDO::getDelFlag, 0));
+            // 如果数量超过，就报错
+            if(CollUtil.isNotEmpty(groupDOList) && groupDOList.size() >= groupMaxNum) {
+                throw new ClientException(String.format("已超出最大分组数: %d",groupMaxNum));
+            }
+            // 3.获取分组标识
+            String gid;
+            do {
+                gid = RandomGenerator.generateRandom();
+            }while (!hasGid(username,gid));
 
-        // 2.插入数据库
-        GroupDO groupDO = GroupDO.builder()
-                .name(groupName)
-                .gid(gid)
-                .sortOrder(0)
-                .username(username)
-                .build();
-        getBaseMapper().insert(groupDO);
+            // 4.插入数据库
+            GroupDO groupDO = GroupDO.builder()
+                    .name(groupName)
+                    .gid(gid)
+                    .sortOrder(0)
+                    .username(username)
+                    .build();
+            getBaseMapper().insert(groupDO);
+        }finally {
+            lock.unlock();
+        }
     }
 
     /**
