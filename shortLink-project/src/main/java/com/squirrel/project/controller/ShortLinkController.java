@@ -1,5 +1,6 @@
 package com.squirrel.project.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.squirrel.common.convention.result.Result;
 import com.squirrel.common.convention.result.Results;
@@ -11,6 +12,7 @@ import com.squirrel.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.squirrel.project.dto.resp.ShortLinkCreateRespDTO;
 import com.squirrel.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.squirrel.project.dto.resp.ShortLinkPageRespDTO;
+import com.squirrel.project.handler.CustomBlockHandler;
 import com.squirrel.project.service.ShortLinkService;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -39,6 +41,11 @@ public class ShortLinkController {
      * @return Result<ShortLinkCreateRespDTO>
      */
     @PostMapping("/api/short-link/v1/create")
+    @SentinelResource(
+            value = "create_short-link",
+            blockHandler = "createShortLinkBlockHandleMethod",
+            blockHandlerClass = CustomBlockHandler.class
+    )
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         return Results.success(shortLinkService.createShortLink(requestParam));
     }
