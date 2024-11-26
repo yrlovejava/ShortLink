@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.squirrel.common.convention.exception.ClientException;
+import com.squirrel.common.convention.exception.ServiceException;
 import com.squirrel.shortLink.admin.common.biz.user.UserContext;
 import com.squirrel.shortLink.admin.dao.entity.UserDO;
 import com.squirrel.shortLink.admin.dao.mapper.UserMapper;
@@ -146,7 +147,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         // 2.查询数据库
         UserDO userDO = getBaseMapper().selectOne(queryWrapper);
         if (userDO == null) {
-            throw new ClientException(USER_NULL);
+            throw new ServiceException(USER_NULL);
         }
 
         // 3.查询redis中是否存在key，验证是否登录
