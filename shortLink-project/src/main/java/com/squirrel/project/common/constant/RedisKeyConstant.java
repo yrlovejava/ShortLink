@@ -29,4 +29,14 @@ public class RedisKeyConstant {
      * 短链接延迟队列消费统计 Key
      */
     public static final String DELAY_QUEUE_STATUS_KEY = "short-link_delay-queue:status";
+
+    /**
+     * 短链接访问uv Key
+     */
+    public static final String SHORT_LINK_STATS_UV_KEY = "short-link:stats:uv:";
+
+    /**
+     * 短链接访问uip Key
+     */
+    public static final String SHORT_LINK_STATS_UIP_KEY = "short-link:stats:uip:";
 }
