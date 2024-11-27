@@ -35,6 +35,10 @@ public class RedisStreamConfiguration {
     @Value("${spring.data.redis.channel-topic.short-link-stats-group}")
     private String group;
 
+    /**
+     * 异步消费redis消息队列的线程池
+     * @return 自定义线程池
+     */
     @Bean
     public ExecutorService asyncStreamConsumer() {
         AtomicInteger index = new AtomicInteger();
@@ -56,8 +60,14 @@ public class RedisStreamConfiguration {
         );
     }
 
-    @Bean(initMethod = "start",destroyMethod = "stop")
+    /**
+     * 创建监听容器
+     * @param asyncStreamConsumer 自定义线程池
+     * @return 监听容器
+     */
+    @Bean(initMethod = "start",destroyMethod = "stop")// 容器初始化时调用 start() 方法,容器销毁时调用 destroy() 方法
     public StreamMessageListenerContainer<String, MapRecord<String,String,String>> streamMessageListenerContainer(ExecutorService asyncStreamConsumer) {
+        // 1.配置监听容器的行为
         StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String,MapRecord<String,String,String>> options =
             StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                     .builder()
@@ -68,12 +78,18 @@ public class RedisStreamConfiguration {
                     // 如果没有拉取到消息，需要阻塞的时间。不能大于 ${spring.data.redis.timeout}，否则会超时
                     .pollTimeout(Duration.ofSeconds(3))
                     .build();
+        // 2.创建监听容器
         StreamMessageListenerContainer<String,MapRecord<String,String,String>> streamMessageListenerContainer =
                 StreamMessageListenerContainer.create(redisConnectionFactory,options);
+
+        // 3.注册一个消息监听器，并开启自动确认(ACK)
         streamMessageListenerContainer.receiveAutoAck(
-                Consumer.from(group,"stats-consumer"),
-                StreamOffset.create(topic, ReadOffset.lastConsumed()),shortLinkStatsSaveConsumer
+                Consumer.from(group,"stats-consumer"),// 创建一个消费者，设置所属消费组，定义消费者名称
+                StreamOffset.create(topic, ReadOffset.lastConsumed()),// topic就是stream的名称 ReadOffset.lastConsumed() 从上次消费的位置开始读取
+                shortLinkStatsSaveConsumer // 消费逻辑的实现
         );
+
+        // 4.返回创建好的监听容器
         return streamMessageListenerContainer;
     }
 }
