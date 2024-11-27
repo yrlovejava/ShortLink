@@ -16,13 +16,12 @@ public class UserConfiguration {
 
     /**
      * 用户信息传递过滤器
-     * @param stringRedisTemplate redisTemplate
      * @return FilterRegistrationBean<UserTransmitFilter>
      */
     @Bean
-    public FilterRegistrationBean<UserTransmitFilter> filterRegistrationBean(StringRedisTemplate stringRedisTemplate) {
+    public FilterRegistrationBean<UserTransmitFilter> filterRegistrationBean() {
         FilterRegistrationBean<UserTransmitFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new UserTransmitFilter(stringRedisTemplate));
+        registrationBean.setFilter(new UserTransmitFilter());
         registrationBean.addUrlPatterns("/*");
         registrationBean.setOrder(0);
         return registrationBean;
