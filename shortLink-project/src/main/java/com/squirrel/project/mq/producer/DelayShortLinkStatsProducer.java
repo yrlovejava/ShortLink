@@ -1,5 +1,6 @@
 package com.squirrel.project.mq.producer;
 
+import cn.hutool.core.lang.UUID;
 import com.squirrel.project.dto.biz.ShortLinkStatsRecordDTO;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBlockingQueue;
@@ -25,6 +26,8 @@ public class DelayShortLinkStatsProducer {
      * @param statsRecord 短链接统计实体参数
      */
     public void send(ShortLinkStatsRecordDTO statsRecord) {
+        // 设置消息的唯一id
+        statsRecord.setKeys(UUID.fastUUID().toString());
         // 获取 redisson 的阻塞队列
         RBlockingQueue<ShortLinkStatsRecordDTO> blockingQueue = redissonClient.getBlockingQueue(DELAY_QUEUE_STATUS_KEY);
         // 获取 redisson 延迟队列
