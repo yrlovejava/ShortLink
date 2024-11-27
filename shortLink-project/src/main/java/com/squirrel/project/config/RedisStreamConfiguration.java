@@ -2,7 +2,6 @@ package com.squirrel.project.config;
 
 import com.squirrel.project.mq.consumer.ShortLinkStatsSaveConsumer;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -19,6 +18,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.squirrel.project.common.constant.RedisKeyConstant.SHORT_LINK_STATS_STREAM_GROUP_KEY;
+import static com.squirrel.project.common.constant.RedisKeyConstant.SHORT_LINK_STATS_STREAM_TOPIC_KEY;
+
 /**
  * Redis Stream 消息队列配置
  */
@@ -28,12 +30,6 @@ public class RedisStreamConfiguration {
 
     private final RedisConnectionFactory redisConnectionFactory;
     private final ShortLinkStatsSaveConsumer shortLinkStatsSaveConsumer;
-
-    @Value("${spring.data.redis.channel-topic.short-link-stats}")
-    private String topic;
-
-    @Value("${spring.data.redis.channel-topic.short-link-stats-group}")
-    private String group;
 
     /**
      * 异步消费redis消息队列的线程池
@@ -84,8 +80,8 @@ public class RedisStreamConfiguration {
 
         // 3.注册一个消息监听器，并开启自动确认(ACK)
         streamMessageListenerContainer.receiveAutoAck(
-                Consumer.from(group,"stats-consumer"),// 创建一个消费者，设置所属消费组，定义消费者名称
-                StreamOffset.create(topic, ReadOffset.lastConsumed()),// topic就是stream的名称 ReadOffset.lastConsumed() 从上次消费的位置开始读取
+                Consumer.from(SHORT_LINK_STATS_STREAM_GROUP_KEY,"stats-consumer"),// 创建一个消费者，设置所属消费组，定义消费者名称
+                StreamOffset.create(SHORT_LINK_STATS_STREAM_TOPIC_KEY, ReadOffset.lastConsumed()),// topic就是stream的名称 ReadOffset.lastConsumed() 从上次消费的位置开始读取
                 shortLinkStatsSaveConsumer // 消费逻辑的实现
         );
 
