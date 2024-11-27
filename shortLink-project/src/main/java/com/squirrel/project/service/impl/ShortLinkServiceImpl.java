@@ -121,14 +121,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             save(shortLinkDO);
             shortLinkGotoMapper.insert(linkGotoDO);
         } catch (DuplicateKeyException ex) {
-            ShortLinkDO hasShortLinkDO = getBaseMapper().selectOne(
-                    Wrappers.<ShortLinkDO>lambdaQuery()
-                            .eq(ShortLinkDO::getFullShortUrl, fullShortUrl)
-            );
-            if (hasShortLinkDO != null) {
-                log.warn("短链接: {} 重复入库", fullShortUrl);
-                throw new ServiceException("短链接生成重复");
-            }
+            throw new ServiceException(String.format("短链接：%s 生成重复", fullShortUrl));
         }
 
         // 5.在redis中保存短链接，采用的是先写数据库再写redis的策略
@@ -251,7 +244,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 throw new ServiceException("短链接频繁生成，请稍后再试");
             }
             String originUrl = dto.getOriginUrl();
-            originUrl += System.currentTimeMillis();
+            originUrl += UUID.fastUUID().toString();
             shortUri = HashUtil.hashToBase62(originUrl);
             if (!shortLinkBloomFilter.contains(createShortLinkDefaultDomain + "/" + shortUri)) {
                 break;
