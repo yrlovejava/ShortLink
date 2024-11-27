@@ -12,6 +12,11 @@ spring:
       host: 127.0.0.1
       port: 6379
       password: 123456
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.183.131:80
+        namespace: 882d6e4e-efd1-48a7-948b-b4800ce9d833
 
 short-link:
   group:

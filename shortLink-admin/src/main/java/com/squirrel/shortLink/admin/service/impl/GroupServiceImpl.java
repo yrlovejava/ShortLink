@@ -15,12 +15,11 @@ import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupRespDTO;
-import com.squirrel.shortLink.admin.remote.ShortLinkRemoteService;
+import com.squirrel.shortLink.admin.remote.ShortLinkActualRemoteService;
 import com.squirrel.shortLink.admin.service.GroupService;
 import com.squirrel.shortLink.admin.toolkit.RandomGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.Group;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,11 +44,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Value("${short-link.group.max-num}")
     private Integer groupMaxNum;
 
-    /**
-     * 后续重构为 SpringCloud Feign 调用
-     */
-    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
-    };
+    private final ShortLinkActualRemoteService shortLinkActualRemoteService;
 
     /**
      * 新增分组
@@ -129,7 +124,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
 
         // 3.调用远程接口查询短链接分组数量
-        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = shortLinkRemoteService.
+        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = shortLinkActualRemoteService.
                 listGroupShortLinkCount(
                         groupDOList.stream().map(GroupDO::getGid).toList()
                 );

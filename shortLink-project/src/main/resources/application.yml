@@ -1,6 +1,8 @@
 server:
   port: 8001
 spring:
+  application:
+    name: short-link-project
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
     url: jdbc:shardingsphere:classpath:shardingsphere-config-${database.env:dev}.yaml
@@ -13,6 +15,11 @@ spring:
     view:
       prefix: /templates/
       suffix: .html
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.183.131:80
+        namespace: 882d6e4e-efd1-48a7-948b-b4800ce9d833
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
