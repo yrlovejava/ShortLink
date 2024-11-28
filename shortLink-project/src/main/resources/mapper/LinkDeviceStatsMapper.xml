@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.squirrel.project.dao.mapper.LinkDeviceStatsMapper">
+<mapper namespace="com.squirrel.shortLink.project.dao.mapper.LinkDeviceStatsMapper">
 
     <!-- ON DUPLICATE KEY UPDATE 如果插入的记录的主键或唯一索引冲突则执行更新操作 -->
     <insert id="shortLinkDeviceState">

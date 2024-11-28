@@ -24,10 +24,14 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
      * @return ip数据
      */
     @Select("select ip,count(ip) as count " +
-            "from t_link_access_logs " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and create_time between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,ip " +
+            "from t_link tl " +
+            "inner join t_link_access_logs tlal on tl.full_short_url = tlal.full_short_url " +
+            "where tlal.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = 0 " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlal.create_time between #{param.startDate} and #{param.endDate} " +
+            "group by tlal.full_short_url,tl.gid,tlal.ip " +
             "order by count desc " +
             "limit 5")
     List<HashMap<String,Object>> listTopIpByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
