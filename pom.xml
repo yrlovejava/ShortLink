@@ -15,6 +15,7 @@
         <module>shortLink-gateway</module>
         <module>shortLink-admin</module>
         <module>shortLink-common</module>
+        <module>shortLink-aggregation</module>
     </modules>
 
     <properties>
