@@ -67,7 +67,7 @@ import static com.squirrel.shortLink.project.common.constant.RedisKeyConstant.*;
 @RequiredArgsConstructor
 public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements ShortLinkService {
 
-    private final RBloomFilter<String> shortLinkBloomFilter;
+    private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
     private final ShortLinkGotoMapper shortLinkGotoMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
@@ -124,6 +124,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             save(shortLinkDO);
             shortLinkGotoMapper.insert(linkGotoDO);
         } catch (DuplicateKeyException ex) {
+            // 首先判断是否存在布隆过滤器中，如果不存在直接新增
+            if (!shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl)) {
+                shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
+            }
             throw new ServiceException(String.format("短链接：%s 生成重复", fullShortUrl));
         }
 
@@ -136,7 +140,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         );
 
         // 6.在布隆过滤器中保存短链接
-        shortLinkBloomFilter.add(fullShortUrl);
+        shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
 
         // 7.返回响应
         return ShortLinkCreateRespDTO.builder()
@@ -249,7 +253,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             String originUrl = dto.getOriginUrl();
             originUrl += UUID.fastUUID().toString();
             shortUri = HashUtil.hashToBase62(originUrl);
-            if (!shortLinkBloomFilter.contains(createShortLinkDefaultDomain + "/" + shortUri)) {
+            if (!shortUriCreateCachePenetrationBloomFilter.contains(createShortLinkDefaultDomain + "/" + shortUri)) {
                 break;
             }
             customGenerateCount++;
@@ -410,7 +414,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
 
         // 3.查询布隆过滤器，解决缓存穿透问题
-        boolean contains = shortLinkBloomFilter.contains(fullShortUrl);
+        boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
         if (!contains) {
             // 跳转到短链接不存在页面
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
