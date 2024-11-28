@@ -50,16 +50,18 @@ public class UserFlowRiskControlFilter implements Filter {
         // 1.获取用户名
         String username = Optional.ofNullable(UserContext.getUsername()).orElse("other");
         // 2.执行lua脚本，获取滑动窗口中的数量
-        Long result = null;
+        Long result;
         try {
             result = stringRedisTemplate.execute(USER_FLOW_RISK_CONTROL_SCRIPT, Lists.newArrayList(username),userFlowRiskControlConfiguration.getTimeWindow());
         }catch (Throwable ex) {
             log.error("执行用户请求流量限制lua脚本出错",ex);
             returnJson((HttpServletResponse) servletResponse, JSON.toJSONString(Results.failure(new ClientException(FLOW_LIMIT_ERROR))));
+            return;
         }
         // 3.如果数量大于限制值
         if (result == null || result > userFlowRiskControlConfiguration.getMaxAccessCount()) {
             returnJson((HttpServletResponse) servletResponse, JSON.toJSONString(Results.failure(new ClientException(FLOW_LIMIT_ERROR))));
+            return;
         }
         // 4.放行
         filterChain.doFilter(servletRequest, servletResponse);
