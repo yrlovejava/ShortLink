@@ -38,11 +38,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.DataValidationEvaluator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -427,7 +429,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         verificationWhiteList(requestParam.getOriginUrl());
         // 1.构造查询条件
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.<ShortLinkDO>lambdaQuery()
-                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getGid, requestParam.getOriginGid())
                 .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                 .eq(ShortLinkDO::getDelFlag, 0)
                 .eq(ShortLinkDO::getEnableStatus, 0);
@@ -438,37 +440,94 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             throw new ClientException("短链接记录不存在");
         }
 
-        // 3.构造实体类
-        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                .gid(requestParam.getGid())
-                .originUrl(requestParam.getOriginUrl())
-                .describe(requestParam.getDescribe())
-                .validDateType(requestParam.getValidDateType())
-                .validDate(requestParam.getValidDate())
-                .build();
-        // 属性拷贝
-        BeanUtil.copyProperties(shortLinkDO, hasShortLinkDO);
-
-        // 4.判断是否修改分组id
-        if (Objects.equals(hasShortLinkDO.getGid(), requestParam.getGid())) {
+        // 如果分组没有改变
+        if (Objects.equals(hasShortLinkDO.getGid(),requestParam.getGid())) {
+            // 构造修改条件
             LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.<ShortLinkDO>lambdaUpdate()
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                     .eq(ShortLinkDO::getGid, requestParam.getGid())
-                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                     .eq(ShortLinkDO::getDelFlag, 0)
-                    .eq(ShortLinkDO::getEnableStatus, 0);
-            baseMapper.update(shortLinkDO, updateWrapper);
+                    .eq(ShortLinkDO::getEnableStatus, 0)
+                    // 如果有效日期类型需要修改为永久，那么就修改短链接的有效时期为null
+                    .set(Objects.equals(requestParam.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()), ShortLinkDO::getValidDate, null);
+
+            // 3.构造短链接实体类，修改数据库中记录
+            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                    .domain(hasShortLinkDO.getDomain())
+                    .shortUri(hasShortLinkDO.getShortUri())
+                    .favicon(Objects.equals(requestParam.getOriginUrl(),hasShortLinkDO.getOriginUrl()) ? hasShortLinkDO.getFavicon() : getFavicon(requestParam.getOriginUrl()))
+                    .createdType(hasShortLinkDO.getCreatedType())
+                    .gid(requestParam.getGid())
+                    .originUrl(requestParam.getOriginUrl())
+                    .describe(requestParam.getDescribe())
+                    .validDateType(requestParam.getValidDateType())
+                    .validDate(requestParam.getValidDate())
+                    .build();
+            update(shortLinkDO,updateWrapper);
         } else {
-            LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.<ShortLinkDO>lambdaUpdate()
-                    .eq(ShortLinkDO::getGid, hasShortLinkDO.getGid())
-                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
-                    .eq(ShortLinkDO::getDelFlag, 0)
-                    .eq(ShortLinkDO::getEnableStatus, 0);
-            // TODO: 这里需要通过加锁保证原子性
-            baseMapper.delete(updateWrapper);
-            baseMapper.insert(shortLinkDO);
+            // 需要修改分组
+            // 4.加写锁
+            RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, requestParam.getFullShortUrl()));
+            RLock rLock = readWriteLock.readLock();
+            rLock.lock();
+            try {
+                // 构造修改查询条件
+                LambdaUpdateWrapper<ShortLinkDO> linkUpdateWrapper = Wrappers.<ShortLinkDO>lambdaUpdate()
+                        .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                        .eq(ShortLinkDO::getGid, hasShortLinkDO.getGid())
+                        .eq(ShortLinkDO::getDelFlag, 0)
+                        .eq(ShortLinkDO::getEnableStatus, 0);
+
+                /*
+                    Update操作，where中的过滤条件列，如果使用索引，锁行，无法用索引，锁表。按照索引规则，如果能使用索引，锁行，不能索引，锁表
+                    这里 link表的索引是唯一联合索引 full_short_url + del_time
+                 */
+                // 5.逻辑删除原来的链接，增加新的链接
+                // 5.1构造短链接实体类，逻辑删除数据库中记录
+                ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
+                        .delTime(System.currentTimeMillis())
+                        .build();
+                delShortLinkDO.setDelFlag(1);
+                update(delShortLinkDO,linkUpdateWrapper);
+
+                // 5.2构造短链接实体类，新增数据库中的记录
+                ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                        .domain(createShortLinkDefaultDomain)
+                        .originUrl(requestParam.getOriginUrl())
+                        .gid(requestParam.getGid())
+                        .createdType(hasShortLinkDO.getCreatedType())
+                        .validDateType(requestParam.getValidDateType())
+                        .validDate(requestParam.getValidDate())
+                        .describe(requestParam.getDescribe())
+                        .shortUri(hasShortLinkDO.getShortUri())
+                        .enableStatus(hasShortLinkDO.getEnableStatus())
+                        .totalPV(hasShortLinkDO.getTotalPV())
+                        .totalUV(hasShortLinkDO.getTotalUV())
+                        .totalUip(hasShortLinkDO.getTotalUip())
+                        .fullShortUrl(hasShortLinkDO.getFullShortUrl())
+                        .favicon(Objects.equals(requestParam.getOriginUrl(), hasShortLinkDO.getOriginUrl()) ? hasShortLinkDO.getFavicon() : getFavicon(requestParam.getOriginUrl()))
+                        .delTime(0L)
+                        .build();
+                baseMapper.insert(shortLinkDO);
+
+                // 6.查询短链接跳转实体
+                LambdaQueryWrapper<ShortLinkGotoDO> linkGotoQueryWrapper = Wrappers.<ShortLinkGotoDO>lambdaQuery()
+                        .eq(ShortLinkGotoDO::getFullShortUrl, requestParam.getFullShortUrl())
+                        .eq(ShortLinkGotoDO::getGid, hasShortLinkDO.getGid());
+                ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(linkGotoQueryWrapper);
+
+                // 7.删除短链接跳转记录
+                shortLinkGotoMapper.delete(linkGotoQueryWrapper);
+
+                // 8.新增短链接跳转记录
+                shortLinkGotoDO.setGid(requestParam.getGid());
+                shortLinkGotoMapper.insert(shortLinkGotoDO);
+            }finally {
+                rLock.unlock();
+            }
         }
 
-        // 5.如果需要修改日期和有效时间类型，那么就要同步redis，这里采取的是删缓存
+        // 9.如果需要修改日期和有效时间类型，那么就要同步redis，这里采取的是删缓存
         if (!Objects.equals(hasShortLinkDO.getValidDateType(), requestParam.getValidDateType()) // 这表明需要修改有效日期
                 || !Objects.equals(hasShortLinkDO.getValidDate(), requestParam.getValidDate()) // 这表明需要修改日期
         ) {

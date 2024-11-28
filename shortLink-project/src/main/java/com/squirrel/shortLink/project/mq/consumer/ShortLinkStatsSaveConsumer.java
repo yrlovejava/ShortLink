@@ -100,15 +100,10 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
     private void actualSaveShortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO statsRecord) {
         // 获取完整短链接
         fullShortUrl = Optional.ofNullable(fullShortUrl).orElse(statsRecord.getFullShortUrl());
-        // 1.加读写锁
+        // 1.加读锁
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
         RLock rLock = readWriteLock.readLock();
-        // 如果没有获取到读写锁
-        if (!rLock.tryLock()) {
-            // 那么就向延迟队列中添加统计任务
-            delayShortLinkStatsProducer.send(statsRecord);
-            return;
-        }
+        rLock.lock();
         // TODO 需要加事务控制,而且事务一定要在锁释放之前
         try {
             // 如果分组id为空

@@ -23,6 +23,7 @@ import static com.squirrel.shortLink.project.common.constant.RedisKeyConstant.DE
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Deprecated
 public class DelayShortLinkStatsConsumer implements InitializingBean {
 
     private final RedissonClient redissonClient;
