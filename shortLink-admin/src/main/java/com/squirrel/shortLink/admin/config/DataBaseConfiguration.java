@@ -2,7 +2,7 @@ package com.squirrel.shortLink.admin.config;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,7 +17,7 @@ public class DataBaseConfiguration {
      * @return MybatisPlusInterceptor
      */
     @Bean
-    @ConditionalOnBean
+    @ConditionalOnMissingBean
     public MybatisPlusInterceptor mybatisPlusInterceptorByAdmin() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor());
