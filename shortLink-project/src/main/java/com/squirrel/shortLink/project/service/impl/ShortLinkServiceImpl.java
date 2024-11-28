@@ -151,6 +151,79 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     }
 
     /**
+     * 通过分布式锁创建短链接
+     * @param requestParam 创建短链接请求参数
+     * @return 创建短链接响应
+     */
+    @Override
+    public ShortLinkCreateRespDTO createShortLinkByLock(ShortLinkCreateReqDTO requestParam) {
+        // 1.验证白名单
+        verificationWhiteList(requestParam.getOriginUrl());
+        String fullShortUrl;
+        // 2.获取锁
+        RLock lock = redissonClient.getLock(SHORT_LINK_CREATE_LOCK_KEY);
+        lock.lock();
+        try {
+            // 3.生成短链接
+            String shortLinkSuffix = generateSuffixByLock(requestParam);
+            // 生成完整短链接
+            fullShortUrl = StrBuilder.create(createShortLinkDefaultDomain)
+                    .append("/")
+                    .append(shortLinkSuffix)
+                    .toString();
+
+            // 4.构造短链接实体
+            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                    .domain(createShortLinkDefaultDomain)
+                    .originUrl(requestParam.getOriginUrl())
+                    .gid(requestParam.getGid())
+                    .createdType(requestParam.getCreatedType())
+                    .validDateType(requestParam.getValidDateType())
+                    .validDate(requestParam.getValidDate())
+                    .describe(requestParam.getDescribe())
+                    .shortUri(shortLinkSuffix)
+                    .enableStatus(0)
+                    .totalPV(0)
+                    .totalUV(0)
+                    .totalUip(0)
+                    .delTime(0L)
+                    .fullShortUrl(fullShortUrl)
+                    .favicon(getFavicon(requestParam.getOriginUrl()))
+                    .build();
+
+            // 5.构造短链接跳转实体
+            ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(requestParam.getGid())
+                    .build();
+
+            // 6.保存数据库
+            try {
+                save(shortLinkDO);
+                shortLinkGotoMapper.insert(linkGotoDO);
+            }catch (DuplicateKeyException ex) {
+                throw new ServiceException(String.format("短链接: %s 生成重复",fullShortUrl));
+            }
+
+            // 7.保存redis，并设置过期时间
+            stringRedisTemplate.opsForValue().set(
+                    String.format(GOTO_SHORT_LINK_KEY,fullShortUrl),
+                    requestParam.getOriginUrl(),
+                    LinkUtil.getLinkCacheValidTime(requestParam.getValidDate()),
+                    TimeUnit.MILLISECONDS
+            );
+
+            return ShortLinkCreateRespDTO.builder()
+                    .fullShortUrl("http://" + fullShortUrl)
+                    .originUrl(requestParam.getOriginUrl())
+                    .gid(requestParam.getGid())
+                    .build();
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    /**
      * 验证白名单
      * @param originUrl 原始链接
      */
@@ -172,6 +245,34 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             // 如果不包含
             throw new ClientException("演示环境为了避免恶意攻击，请生成一下网站跳转链接: " + gotoDomainWhiteListConfiguration.getNames());
         }
+    }
+
+    /**
+     * 通过分布式锁生成短链接
+     * @param requestParam 创建短链接请求参数
+     * @return 非完整短链接
+     */
+    private String generateSuffixByLock(ShortLinkCreateReqDTO requestParam) {
+        int customGenerateCount = 0;
+        String shorUri;
+        while (true) {
+            if (customGenerateCount > 10) {
+                throw new ServiceException("短链接频繁生成，请稍后再试");
+            }
+            String originUrl = requestParam.getOriginUrl();
+            originUrl += UUID.randomUUID().toString();
+            shorUri = HashUtil.hashToBase62(originUrl);
+            LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getGid, requestParam.getGid())
+                    .eq(ShortLinkDO::getFullShortUrl, createShortLinkDefaultDomain + "/" + shorUri)
+                    .eq(ShortLinkDO::getDelFlag, 0);
+            ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
+            if (shortLinkDO == null) {
+                break;
+            }
+            customGenerateCount++;
+        }
+        return shorUri;
     }
 
     /**
@@ -251,7 +352,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 throw new ServiceException("短链接频繁生成，请稍后再试");
             }
             String originUrl = dto.getOriginUrl();
-            originUrl += UUID.fastUUID().toString();
+            originUrl += UUID.randomUUID().toString();
             shortUri = HashUtil.hashToBase62(originUrl);
             if (!shortUriCreateCachePenetrationBloomFilter.contains(createShortLinkDefaultDomain + "/" + shortUri)) {
                 break;
