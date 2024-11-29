@@ -63,9 +63,9 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         String stream = message.getStream();
         RecordId id = message.getId();
         // 如果当前消息被消费过
-        if (!messageQueueIdempotentHandler.isMessageProcessed(id.toString())) {
+        if (messageQueueIdempotentHandler.isMessageProcessed(id.toString())) {
             // 判断当前的这个消息流程是否执行完成
-            if (messageQueueIdempotentHandler.isMessageProcessed(id.toString())) {
+            if (messageQueueIdempotentHandler.isAccomplish(id.toString())) {
                 // 执行完成直接返回
                 return;
             }
@@ -108,6 +108,8 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
             String gid = shortLinkGotoDO.getGid();
 
             // 3.获取当前时间信息
+            // 当前日期
+            Date currentDate = statsRecord.getCurrentDate();
             // 小时(24小时制)
             int hour = DateUtil.hour(new Date(),true);
             // 星期
@@ -123,7 +125,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                     .weekday(weekValue)
                     .fullShortUrl(fullShortUrl)
                     .gid(gid)
-                    .date(new Date())
+                    .date(currentDate)
                     .build();
             linkAccessStatsMapper.insert(linkAccessStatsDO);
 
@@ -153,7 +155,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                         .fullShortUrl(fullShortUrl)
                         .country("中国")
                         .gid(gid)
-                        .date(new Date())
+                        .date(currentDate)
                         .build();
                 linkLocaleStatsMapper.insert(linkLocaleStatsDO);
             }
@@ -164,7 +166,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                     .cnt(1)
                     .gid(gid)
                     .fullShortUrl(fullShortUrl)
-                    .date(new Date())
+                    .date(currentDate)
                     .build();
             linkOsStatsMapper.insert(linkOsStatsDO);
 
@@ -174,7 +176,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                     .cnt(1)
                     .gid(gid)
                     .fullShortUrl(fullShortUrl)
-                    .date(new Date())
+                    .date(currentDate)
                     .build();
             linkBrowserStatsMapper.shortLinkBrowserStats(linkBrowserStatsDO);
 
@@ -184,7 +186,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                     .cnt(1)
                     .gid(gid)
                     .fullShortUrl(fullShortUrl)
-                    .date(new Date())
+                    .date(currentDate)
                     .build();
             linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
 
@@ -194,7 +196,7 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                     .cnt(1)
                     .gid(gid)
                     .fullShortUrl(fullShortUrl)
-                    .date(new Date())
+                    .date(currentDate)
                     .build();
             linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
 
