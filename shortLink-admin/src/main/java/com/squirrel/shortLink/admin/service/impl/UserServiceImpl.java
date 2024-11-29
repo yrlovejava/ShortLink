@@ -26,6 +26,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Objects;
@@ -86,6 +87,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
      * @param requestParam 注册信息
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void register(UserRegisterReqDTO requestParam) {
         // 1.查询用户名是否存在
         if (!hasUsername(requestParam.getUsername())) {
@@ -101,12 +103,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             if (inserted < 1) {
                 throw new ClientException(USER_SAVE_ERROR);
             }
-            // 3.在布隆过滤器中保存新的用户名
-            userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
-
-            // 4.保存分组
+            // 3.保存分组
             // 这里需要传递用户名是因为注册的时候上下文中还没有用户信息，所以需要传递
             groupService.saveGroup(requestParam.getUsername(), "默认分组");
+
+            // 先插入数据库，再保存在布隆过滤器中
+            // 4.在布隆过滤器中保存新的用户名
+            userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
         } catch (DuplicateKeyException ex) {
             throw new ClientException(USER_EXIST);
         } finally {

@@ -2,11 +2,15 @@ package com.squirrel.shortLink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.squirrel.shortLink.admin.dao.entity.GroupUniqueDO;
+import com.squirrel.shortLink.admin.dao.mapper.GroupUniqueMapper;
 import com.squirrel.shortLink.common.convention.exception.ClientException;
+import com.squirrel.shortLink.common.convention.exception.ServiceException;
 import com.squirrel.shortLink.common.convention.result.Result;
 import com.squirrel.shortLink.admin.common.biz.user.UserContext;
 import com.squirrel.shortLink.admin.dao.entity.GroupDO;
@@ -20,11 +24,14 @@ import com.squirrel.shortLink.admin.service.GroupService;
 import com.squirrel.shortLink.admin.toolkit.RandomGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import javax.sql.rowset.serial.SerialException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,6 +52,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     private Integer groupMaxNum;
 
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;
+    private final RBloomFilter<String> gidRegisterCachePenetrationBloomFilter;
+    private final GroupUniqueMapper groupUniqueMapper;
 
     /**
      * 新增分组
@@ -74,23 +83,56 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
             if(CollUtil.isNotEmpty(groupDOList) && groupDOList.size() >= groupMaxNum) {
                 throw new ClientException(String.format("已超出最大分组数: %d",groupMaxNum));
             }
-            // 3.获取分组标识
-            String gid;
-            do {
-                gid = RandomGenerator.generateRandom();
-            }while (!hasGid(username,gid));
 
-            // 4.插入数据库
-            GroupDO groupDO = GroupDO.builder()
-                    .name(groupName)
-                    .gid(gid)
-                    .sortOrder(0)
-                    .username(username)
-                    .build();
-            getBaseMapper().insert(groupDO);
+            // 3.获取分组标识
+            int retryCount = 0;
+            int maxRetries = 10;
+            String gid = null;
+            while (retryCount < maxRetries) {
+                gid = saveGroupUniqueReturnGid();
+                // 如果分组标识不为空，也就是生成成功
+                if (StrUtil.isNotEmpty(gid)) {
+                    // 4.插入数据库
+                    GroupDO groupDO = GroupDO.builder()
+                            .name(groupName)
+                            .gid(gid)
+                            .sortOrder(0)
+                            .username(username)
+                            .build();
+                    getBaseMapper().insert(groupDO);
+                    // 在布隆过滤器添加
+                    gidRegisterCachePenetrationBloomFilter.add(gid);
+                    break;
+                }
+                retryCount++;
+            }
+            if (StrUtil.isEmpty(gid)) {
+                throw new ServiceException("生成分组标识频繁");
+            }
         }finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * 生成唯一的分组标识并保存在数据库中
+     * @return 分组标识
+     */
+    private String saveGroupUniqueReturnGid() {
+        String gid = RandomGenerator.generateRandom();
+        // 先查询布隆过滤器，如果没有就生成
+        if (!gidRegisterCachePenetrationBloomFilter.contains(gid)){
+            GroupUniqueDO groupUniqueDO = GroupUniqueDO.builder()
+                    .gid(gid)
+                    .build();
+            try {
+                // 就算布隆过滤器有误判，但是数据库的唯一索引会导致插入失败，如果插入失败返回null即可
+                groupUniqueMapper.insert(groupUniqueDO);
+            } catch (DuplicateKeyException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     /**

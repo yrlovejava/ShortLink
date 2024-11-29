@@ -1,6 +1,7 @@
 package com.squirrel.shortLink.admin.remote;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.squirrel.shortLink.admin.config.OpenFeignConfiguration;
 import com.squirrel.shortLink.common.convention.result.Result;
 import com.squirrel.shortLink.admin.dto.req.*;
 import com.squirrel.shortLink.admin.dto.resp.ShortLinkGroupCountQueryRespDTO;
@@ -23,7 +24,11 @@ import java.util.List;
 /**
  * 短链接中台远程调用服务
  */
-@FeignClient(value = "short-link-project", url = "${aggregation.remote-url:}")
+@FeignClient(
+        value = "short-link-project",
+        url = "${aggregation.remote-url:}",
+        configuration = OpenFeignConfiguration.class
+)
 public interface ShortLinkActualRemoteService {
 
     /**

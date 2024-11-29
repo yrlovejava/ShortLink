@@ -7,6 +7,9 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.squirrel.shortLink.common.convention.exception.ServiceException;
+import com.squirrel.shortLink.project.common.biz.user.UserContext;
 import com.squirrel.shortLink.project.dao.entity.*;
 import com.squirrel.shortLink.project.dao.mapper.*;
 import com.squirrel.shortLink.project.dto.req.ShortLinkGroupStatsAccessRecordReqDTO;
@@ -35,6 +38,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
+    private final LinkGroupMapper linkGroupMapper;
 
     /**
      * 获取单个短链接监控数据
@@ -44,6 +48,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
      */
     @Override
     public ShortLinkStatsRespDTO oneShortLinkStats(ShortLinkStatsReqDTO requestParam) {
+        checkGroupBelongToUser(requestParam.getGid());
         // 1.基础访问详情 uv pv uip
         // 1.1查询数据库
         List<LinkAccessStatsDO> linkStatsByShortLink = linkAccessStatsMapper.listStatsByShortLink(requestParam);
@@ -284,12 +289,30 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
     }
 
     /**
+     * 检查用户属于的分组
+     * @param gid 分组id
+     * @throws ServiceException Service异常
+     */
+    public void checkGroupBelongToUser(String gid) throws ServiceException {
+        String username = Optional.ofNullable(UserContext.getUserName())
+                .orElseThrow(() -> new ServiceException("用户未登录"));
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.<GroupDO>lambdaQuery()
+                .eq(GroupDO::getGid, gid)
+                .eq(GroupDO::getUsername, username);
+        List<GroupDO> groupDOList = linkGroupMapper.selectList(queryWrapper);
+        if (CollUtil.isEmpty(groupDOList)) {
+            throw new ServiceException("用户信息与分组标识不匹配");
+        }
+    }
+
+    /**
      * 访问单个短链接指定时间内访问记录监控数据
      * @param requestParam 获取短链接监控访问记录数据入参
      * @return 访问记录监控数据
      */
     @Override
     public IPage<ShortLinkStatsAccessRecordRespDTO> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        checkGroupBelongToUser(requestParam.getGid());
         // 1.构造查询条件
         LambdaQueryWrapper<LinkAccessLogsDO> queryWrapper = Wrappers.<LinkAccessLogsDO>lambdaQuery()
                 .eq(LinkAccessLogsDO::getFullShortUrl, requestParam.getFullShortUrl())
@@ -299,6 +322,9 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
 
         // 2.分页查询数据库
         IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectPage(requestParam, queryWrapper);
+        if (CollUtil.isEmpty(linkAccessLogsDOIPage.getRecords())) {
+            return new Page<>();
+        }
 
         // 3.转换为需要返回的数据
         IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
@@ -340,6 +366,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
      */
     @Override
     public ShortLinkStatsRespDTO groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
+        checkGroupBelongToUser(requestParam.getGid());
         List<LinkAccessStatsDO> listStatsByGroup = linkAccessStatsMapper.listStatsByGroup(requestParam);
         if (CollUtil.isEmpty(listStatsByGroup)) {
             return null;
@@ -508,8 +535,12 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
      */
     @Override
     public IPage<ShortLinkStatsAccessRecordRespDTO> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
+        checkGroupBelongToUser(requestParam.getGid());
         // 1.分页查询短链接访问记录
         IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectGroupPage(requestParam);
+        if (CollUtil.isEmpty(linkAccessLogsDOIPage.getRecords())){
+            return new Page<>();
+        }
 
         // 2.处理查询到的访问记录
         IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));

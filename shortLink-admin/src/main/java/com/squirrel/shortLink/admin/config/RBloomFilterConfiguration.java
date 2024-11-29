@@ -25,4 +25,18 @@ public class RBloomFilterConfiguration {
         );
         return cachePenetrationBloomFilter;
     }
+
+    /**
+     * 防止分组标识注册查询数据库的布隆过滤器
+     * @param redissonClient redisson 客户端
+     * @return RBloomFilter<String>
+     */
+    public RBloomFilter<String> gidRegisterCachePenetrationBloomFilter(RedissonClient redissonClient) {
+        RBloomFilter<String> cachePenetrationBloomFilter = redissonClient.getBloomFilter("gidRegisterCachePenetrationBloomFilter");
+        cachePenetrationBloomFilter.tryInit(
+                200000000L,// 布隆过滤器的容量 2亿
+                0.001 // 误判率 0.1%的假阳性
+        );
+        return cachePenetrationBloomFilter;
+    }
 }
