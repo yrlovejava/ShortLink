@@ -120,19 +120,20 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
      */
     private String saveGroupUniqueReturnGid() {
         String gid = RandomGenerator.generateRandom();
-        // 先查询布隆过滤器，如果没有就生成
-        if (!gidRegisterCachePenetrationBloomFilter.contains(gid)){
-            GroupUniqueDO groupUniqueDO = GroupUniqueDO.builder()
-                    .gid(gid)
-                    .build();
-            try {
-                // 就算布隆过滤器有误判，但是数据库的唯一索引会导致插入失败，如果插入失败返回null即可
-                groupUniqueMapper.insert(groupUniqueDO);
-            } catch (DuplicateKeyException e) {
-                return null;
-            }
+        // 先查询布隆过滤器，如果没有就生成,如果有就返回null
+        if (gidRegisterCachePenetrationBloomFilter.contains(gid)){
+            return null;
         }
-        return null;
+        GroupUniqueDO groupUniqueDO = GroupUniqueDO.builder()
+                .gid(gid)
+                .build();
+        try {
+            // 就算布隆过滤器有误判，但是数据库的唯一索引会导致插入失败，如果插入失败返回null即可
+            groupUniqueMapper.insert(groupUniqueDO);
+        } catch (DuplicateKeyException e) {
+            return null;
+        }
+        return gid;
     }
 
     /**
