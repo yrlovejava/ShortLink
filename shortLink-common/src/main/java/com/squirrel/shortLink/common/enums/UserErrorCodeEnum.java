@@ -1,6 +1,6 @@
-package com.squirrel.common.enums;
+package com.squirrel.shortLink.common.enums;
 
-import com.squirrel.common.convention.errorcode.IErrorCode;
+import com.squirrel.shortLink.common.convention.errorcode.IErrorCode;
 
 public enum UserErrorCodeEnum implements IErrorCode {
 

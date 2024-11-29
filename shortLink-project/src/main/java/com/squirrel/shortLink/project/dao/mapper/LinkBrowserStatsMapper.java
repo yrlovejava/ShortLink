@@ -26,11 +26,15 @@ public interface LinkBrowserStatsMapper extends BaseMapper<LinkBrowserStatsDO> {
      * @param requestParam 查询参数
      * @return 监控数据
      */
-    @Select("select browser,sum(cnt) as count " +
-            "from t_link_browser_stats " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and date between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,browser")
+    @Select("select tlbs.browser,sum(tlbs.cnt) as count " +
+            "from t_link tl " +
+            "inner join t_link_browser_stats tlbs on tl.full_short_url = tlbs.full_short_url " +
+            "where tlbs.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlbs.date between #{param.startDate} and #{param.endDate} " +
+            "group by tlbs.full_short_url,tl.gid,tlbs.browser")
     List<HashMap<String, Object>> listBrowserStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -38,9 +42,13 @@ public interface LinkBrowserStatsMapper extends BaseMapper<LinkBrowserStatsDO> {
      * @param requestParam 分组短链接
      * @return List<HashMap<String,Object>>
      */
-    @Select("select browser,sum(cnt) as count " +
-            "from t_link_browser_stats " +
-            "where date between #{param.startDate} and #{param.endDate} " +
-            "group by browser")
+    @Select("select tlbs.browser,sum(tlbs.cnt) as count " +
+            "from t_link tl " +
+            "inner join t_link_browser_stats tlbs on tl.full_short_url = tlbs.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlbs.date between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid,tlbs.browser")
     List<HashMap<String,Object>> listBrowserStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }

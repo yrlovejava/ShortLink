@@ -1,7 +1,7 @@
 package com.squirrel.shortLink.project.controller;
 
-import com.squirrel.common.convention.result.Result;
-import com.squirrel.common.convention.result.Results;
+import com.squirrel.shortLink.common.convention.result.Result;
+import com.squirrel.shortLink.common.convention.result.Results;
 import com.squirrel.shortLink.project.service.UrlTitleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

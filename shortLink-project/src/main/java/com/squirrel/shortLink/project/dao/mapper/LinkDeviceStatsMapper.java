@@ -25,11 +25,15 @@ public interface LinkDeviceStatsMapper extends BaseMapper<LinkDeviceStatsDO> {
      * @param requestParam 查询参数
      * @return 监控数据
      */
-    @Select("select device,sum(cnt) as count " +
-            "from t_link_device_stats " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and date between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,device")
+    @Select("select tlds.device,sum(tlds.cnt) as count " +
+            "from t_link tl " +
+            "inner join t_link_device_stats tlds on tl.full_short_url = tlds.full_short_url " +
+            "where tlds.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlds.date between #{param.startDate} and #{param.endDate} " +
+            "group by tlds.full_short_url,tl.gid,tlds.device")
     List<LinkDeviceStatsDO> listDeviceStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -37,9 +41,13 @@ public interface LinkDeviceStatsMapper extends BaseMapper<LinkDeviceStatsDO> {
      * @param requestParam 分组信息
      * @return 监控数据
      */
-    @Select("select device,sum(cnt) as count " +
-            "from t_link_device_stats " +
-            "where date between #{param.startDate} and #{param.endDate} " +
-            "group by device")
+    @Select("select tlds.device,sum(tlds.cnt) as count " +
+            "from t_link tl " +
+            "inner join t_link_device_stats tlds on tl.full_short_url = tlds.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlds.date between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid,tlds.device")
     List<LinkDeviceStatsDO> listDeviceStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }

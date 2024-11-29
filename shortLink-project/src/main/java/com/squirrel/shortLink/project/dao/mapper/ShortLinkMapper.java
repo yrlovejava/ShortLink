@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.squirrel.shortLink.project.dao.entity.ShortLinkDO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkPageReqDTO;
+import com.squirrel.shortLink.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
@@ -39,4 +40,11 @@ public interface ShortLinkMapper extends BaseMapper<ShortLinkDO> {
      * @return 短链接
      */
     IPage<ShortLinkDO> pageLink(ShortLinkPageReqDTO requestParam);
+
+    /**
+     * 分页统计回收站短链接
+     * @param requestParam 分页查询条件
+     * @return 短链接信息
+     */
+    IPage<ShortLinkDO> pageRecycleBinLink(ShortLinkRecycleBinPageReqDTO requestParam);
 }

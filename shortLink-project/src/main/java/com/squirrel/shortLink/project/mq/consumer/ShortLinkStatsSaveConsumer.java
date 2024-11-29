@@ -7,7 +7,7 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.squirrel.common.convention.exception.ServiceException;
+import com.squirrel.shortLink.common.convention.exception.ServiceException;
 import com.squirrel.shortLink.project.dao.entity.*;
 import com.squirrel.shortLink.project.dao.mapper.*;
 import com.squirrel.shortLink.project.dto.biz.ShortLinkStatsRecordDTO;
@@ -73,12 +73,8 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         }
         try {
             Map<String, String> producerMap = message.getValue();
-            String fullShortUrl = producerMap.get("fullShortUrl");
-            if (StrUtil.isNotBlank(fullShortUrl)) {
-                String gid = producerMap.get("gid");
-                ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
-                actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
-            }
+            ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
+            actualSaveShortLinkStats(statsRecord);
             // 从消息队列中删除消息
             stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
         }catch (Throwable ex) {
@@ -94,27 +90,23 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
 
     /**
      * 记录短链接监控数据
-     * @param fullShortUrl 完整短链接
-     * @param gid 分组id
      * @param statsRecord 短链接统计数据
      */
-    private void actualSaveShortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO statsRecord) {
+    private void actualSaveShortLinkStats(ShortLinkStatsRecordDTO statsRecord) {
         // 获取完整短链接
-        fullShortUrl = Optional.ofNullable(fullShortUrl).orElse(statsRecord.getFullShortUrl());
+        String fullShortUrl = statsRecord.getFullShortUrl();
         // 1.加读锁
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
         RLock rLock = readWriteLock.readLock();
         rLock.lock();
         // TODO 需要加事务控制,而且事务一定要在锁释放之前
         try {
-            // 如果分组id为空
-            if (StrUtil.isBlank(gid)) {
-                // 2.从路由表中通过完整短链接查询goto实体
-                ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(Wrappers.<ShortLinkGotoDO>lambdaQuery()
-                        .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl));
-                // 通过goto实体获取到分组id
-                gid = shortLinkGotoDO.getGid();
-            }
+            // 2.从路由表中通过完整短链接查询goto实体
+            ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(Wrappers.<ShortLinkGotoDO>lambdaQuery()
+                    .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl));
+            // 通过goto实体获取到分组id
+            String gid = shortLinkGotoDO.getGid();
+
             // 3.获取当前时间信息
             // 小时(24小时制)
             int hour = DateUtil.hour(new Date(),true);

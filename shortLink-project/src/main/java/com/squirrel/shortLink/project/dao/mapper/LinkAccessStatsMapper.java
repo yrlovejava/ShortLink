@@ -25,11 +25,15 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
      * @param reqDTO 查询参数
      * @return 监控数据
      */
-    @Select("select date,sum(pv) as pv,sum(uv) as uv,sum(uip) as uip " +
-            "from t_link_access_stats " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and date between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,date")
+    @Select("select tlas.date,sum(tlas.pv) as pv,sum(tlas.uv) as uv,sum(tlas.uip) as uip " +
+            "from t_link tl " +
+            "inner join t_link_access_stats tlas on tl.full_short_url = tlas.full_short_url " +
+            "where tlas.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlas.date between #{param.startDate} and #{param.endDate} " +
+            "group by tlas.full_short_url,tl.gid,tlas.date;")
     List<LinkAccessStatsDO> listStatsByShortLink(@Param("param") ShortLinkStatsReqDTO reqDTO);
 
     /**
@@ -37,9 +41,14 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
      * @param requestParam 分组短链接信息
      * @return List<LinkAccessStatsDO>
      */
-    @Select("select * from t_link_access_stats " +
-            "where date between #{param.startDate} and #{endDate} " +
-            "group by date")
+    @Select("select tlas.date,sum(tlas.pv) as pv,sum(tlas.uv) as uv,sum(tlas.uip) as uip " +
+            "from t_link tl " +
+            "inner join t_link_access_stats tlas on tl.full_short_url = tlas.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlas.date between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid,tlas.date;")
     List<LinkAccessStatsDO> listStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
@@ -47,11 +56,15 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
      * @param requestParam 查询参数
      * @return 监控数据
      */
-    @Select("select hour,sum(pv) as pv " +
-            "from t_link_access_stats " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and date between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,hour")
+    @Select("select tlas.hour,sum(tlas.pv) as pv " +
+            "from t_link tl " +
+            "inner join t_link_access_stats tlas on tl.full_short_url = tlas.full_short_url " +
+            "where tlas.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlas.date between #{param.startDate} and #{param.endDate} " +
+            "group by tlas.full_short_url,tl.gid,tlas.hour;")
     List<LinkAccessStatsDO> listHourStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -59,9 +72,14 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
      * @param requestParam 分组短链接信息
      * @return List<LinkAccessStatsDO>
      */
-    @Select("select hour,sum(pv) as pv from t_link_access_stats " +
-            "where date between #{param.startDate} and #{param.endDate} " +
-            "group by hour")
+    @Select("select tlas.hour,sum(tlas.pv) as pv " +
+            "from t_link tl " +
+            "inner join t_link_access_stats tlas on tl.full_short_url = tlas.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlas.date between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid,tlas.hour;")
     List<LinkAccessStatsDO> listHourStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
@@ -69,11 +87,15 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
      * @param requestParam 查询参数
      * @return 监控数据
      */
-    @Select("select weekday,sum(pv) as pv " +
-            "from t_link_access_stats " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and date between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,weekday")
+    @Select("select tlas.weekday,sum(tlas.pv) as pv " +
+            "from t_link tl " +
+            "inner join t_link_access_stats tlas on tl.full_short_url = tlas.full_short_url " +
+            "where tlas.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlas.date between #{param.startDate} and #{param.endDate} " +
+            "group by tlas.full_short_url,tl.gid,tlas.weekday;")
     List<LinkAccessStatsDO> listWeekdayStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -81,8 +103,13 @@ public interface LinkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
      * @param requestParam 分组短链接信息
      * @return List<LinkAccessStatsDO>
      */
-    @Select("select weekday,sum(pv) as pv from t_link_access_stats " +
-            "where date between #{param.startDate} and #{param.endDate} " +
-            "group by weekday")
+    @Select("select tlas.weekday,sum(tlas.pv) as pv " +
+            "from t_link tl " +
+            "inner join t_link_access_stats tlas on tl.full_short_url = tlas.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlas.date between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid,tlas.weekday;")
     List<LinkAccessStatsDO> listWeekdayStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }

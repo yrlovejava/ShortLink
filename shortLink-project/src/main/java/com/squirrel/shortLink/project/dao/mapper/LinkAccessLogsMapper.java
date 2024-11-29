@@ -1,8 +1,10 @@
 package com.squirrel.shortLink.project.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.squirrel.shortLink.project.dao.entity.LinkAccessLogsDO;
 import com.squirrel.shortLink.project.dao.entity.LinkAccessStatsDO;
+import com.squirrel.shortLink.project.dto.req.ShortLinkGroupStatsAccessRecordReqDTO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkGroupStatsReqDTO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkStatsReqDTO;
 import org.apache.ibatis.annotations.MapKey;
@@ -23,17 +25,17 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
      * @param requestParam 查询参数
      * @return ip数据
      */
-    @Select("select ip,count(ip) as count " +
+    @Select("select ip,count(tlal.ip) as count " +
             "from t_link tl " +
             "inner join t_link_access_logs tlal on tl.full_short_url = tlal.full_short_url " +
             "where tlal.full_short_url = #{param.fullShortUrl} " +
             "and tl.gid = #{param.gid} " +
-            "and tl.del_flag = 0 " +
+            "and tl.del_flag = '0' " +
             "and tl.enable_status = #{param.enableStatus} " +
             "and tlal.create_time between #{param.startDate} and #{param.endDate} " +
             "group by tlal.full_short_url,tl.gid,tlal.ip " +
             "order by count desc " +
-            "limit 5")
+            "limit 5;")
     List<HashMap<String,Object>> listTopIpByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -53,7 +55,9 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
      */
     @MapKey("user")
     List<Map<String,Object>> selectUvTypeByUsers(
+            @Param("gid") String gid,
             @Param("fullShortUrl") String fullShortUrl,
+            @Param("enableStatus") Integer enableStatus,
             @Param("startDate") String startDate,
             @Param("endDate") String endDate,
             @Param("userAccessLogsList") List<String> userAccessLogsList
@@ -65,12 +69,17 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
      * @return pv，uv，uip
      */
     @Select("select " +
-            "count(user) as pv," +
-            "count(distinct user) as uv," +
-            "count(distinct ip) as uip " +
-            "from t_link_access_logs " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and create_time between #{param.startDate} and #{param.endDate}")
+            "count(tlal.user) as pv," +
+            "count(distinct tlal.user) as uv," +
+            "count(distinct tlal.ip) as uip " +
+            "from t_link tl " +
+            "inner join t_link_access_logs tlal on tl.full_short_url = tlal.full_short_url " +
+            "where tlal.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlal.create_time between #{param.startDate} and #{param.endDate} " +
+            "group by tlal.full_short_url, tl.gid;")
     LinkAccessStatsDO findPvUvUipStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -78,12 +87,16 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
      * @param requestParam 分组短链接信息
      * @return 高频IP数据
      */
-    @Select("select ip,count(ip) as count " +
-            "from t_link_access_logs " +
-            "where create_time between #{param.startDate} and #{param.endDate} " +
-            "group by ip " +
+    @Select("select ip,count(tlal.ip) as count " +
+            "from t_link tl " +
+            "inner join t_link_access_logs tlal on tl.full_short_url = tlal.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlal.create_time between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid,tlal.ip " +
             "order by count desc " +
-            "limit 5")
+            "limit 5;")
     List<HashMap<String,Object>> listTopIpByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
@@ -91,8 +104,17 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
      * @param requestParam 分组短链接信息
      * @return PV,UV,UIP
      */
-    @Select("select * from t_link_access_logs " +
-            "where create_time between #{param.startDate} and #{param.endDate}")
+    @Select("select " +
+            "count(tlal.user) as pv," +
+            "count(distinct tlal.user) as uv," +
+            "count(distinct tlal.ip) as uip " +
+            "from t_link tl " +
+            "inner join t_link_access_logs tlal on tl.full_short_url = tlal.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlal.create_time between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid;")
     LinkAccessStatsDO findPvUvUipStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 
     /**
@@ -110,4 +132,19 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             @Param("endDate") String endDate,
             @Param("userAccessLogsList") List<String> userAccessLogsList
     );
+
+    /**
+     * 分页查询指定分组的访问日志
+     * @param requestParam 分页查询参数
+     * @return 访问日志
+     */
+    @Select("select tlal.* " +
+            "from t_link tl " +
+            "inner join t_link_access_logs tlal on tl.full_short_url = tlal.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlal.create_time between #{param.startDate} and #{param.endDate} " +
+            "order by tlal.create_time desc")
+    IPage<LinkAccessLogsDO> selectGroupPage(@Param("param")ShortLinkGroupStatsAccessRecordReqDTO requestParam);
 }

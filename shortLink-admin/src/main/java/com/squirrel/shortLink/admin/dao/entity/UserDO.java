@@ -1,7 +1,7 @@
 package com.squirrel.shortLink.admin.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.squirrel.common.database.BaseDO;
+import com.squirrel.shortLink.common.database.BaseDO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

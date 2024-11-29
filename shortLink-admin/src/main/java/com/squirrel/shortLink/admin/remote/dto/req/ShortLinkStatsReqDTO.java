@@ -1,4 +1,4 @@
-package com.squirrel.shortLink.admin.dto.req;
+package com.squirrel.shortLink.admin.remote.dto.req;
 
 import lombok.Data;
 
@@ -27,4 +27,9 @@ public class ShortLinkStatsReqDTO {
      * 结束日期
      */
     private String endDate;
+
+    /**
+     * 启用标识 0：启用 1：未启用
+     */
+    private Integer enableStatus;
 }

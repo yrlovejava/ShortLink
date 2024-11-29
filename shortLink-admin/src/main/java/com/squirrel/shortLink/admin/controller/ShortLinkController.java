@@ -1,8 +1,8 @@
 package com.squirrel.shortLink.admin.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.squirrel.common.convention.result.Result;
-import com.squirrel.common.convention.result.Results;
+import com.squirrel.shortLink.common.convention.result.Result;
+import com.squirrel.shortLink.common.convention.result.Results;
 import com.squirrel.shortLink.admin.remote.ShortLinkActualRemoteService;
 import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkBatchCreateReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.req.ShortLinkCreateReqDTO;

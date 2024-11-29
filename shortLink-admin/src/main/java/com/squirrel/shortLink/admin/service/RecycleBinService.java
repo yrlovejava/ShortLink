@@ -1,7 +1,7 @@
 package com.squirrel.shortLink.admin.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.squirrel.common.convention.result.Result;
+import com.squirrel.shortLink.common.convention.result.Result;
 import com.squirrel.shortLink.admin.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 

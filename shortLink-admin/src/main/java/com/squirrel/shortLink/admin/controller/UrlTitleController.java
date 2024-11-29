@@ -1,6 +1,6 @@
 package com.squirrel.shortLink.admin.controller;
 
-import com.squirrel.common.convention.result.Result;
+import com.squirrel.shortLink.common.convention.result.Result;
 import com.squirrel.shortLink.admin.remote.ShortLinkActualRemoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

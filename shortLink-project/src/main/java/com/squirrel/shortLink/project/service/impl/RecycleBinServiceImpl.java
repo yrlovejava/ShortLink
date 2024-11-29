@@ -72,21 +72,10 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
      */
     @Override
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
-        // 1.构建查询条件
-        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.<ShortLinkDO>lambdaQuery()
-                .select(ShortLinkDO::getId, ShortLinkDO::getDomain, ShortLinkDO::getShortUri,
-                        ShortLinkDO::getGid, ShortLinkDO::getFullShortUrl, ShortLinkDO::getOriginUrl,
-                        ShortLinkDO::getValidDateType, ShortLinkDO::getValidDate, ShortLinkDO::getDescribe,
-                        ShortLinkDO::getFavicon, ShortLinkDO::getCreateTime)
-                .eq(ShortLinkDO::getEnableStatus, 1)
-                .eq(ShortLinkDO::getDelFlag, 0)
-                .in(ShortLinkDO::getGid,requestParam.getGidList())
-                .orderByDesc(ShortLinkDO::getUpdateTime);
+        // 1.分页查询
+        IPage<ShortLinkDO> resultPage = baseMapper.pageRecycleBinLink(requestParam);
 
-        // 2.分页查询
-        IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam,queryWrapper);
-
-        // 3.处理查询结果并返回
+        // 2.处理查询结果并返回
         return resultPage.convert(e -> {
             ShortLinkPageRespDTO result = BeanUtil.toBean(e, ShortLinkPageRespDTO.class);
             result.setDomain("http://" + result.getDomain());

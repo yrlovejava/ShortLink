@@ -1,4 +1,4 @@
-package com.squirrel.common.database;
+package com.squirrel.shortLink.common.database;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

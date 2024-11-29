@@ -12,8 +12,8 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.squirrel.common.convention.exception.ClientException;
-import com.squirrel.common.convention.exception.ServiceException;
+import com.squirrel.shortLink.common.convention.exception.ClientException;
+import com.squirrel.shortLink.common.convention.exception.ServiceException;
 import com.squirrel.shortLink.project.common.enums.VailDateTypeEnum;
 import com.squirrel.shortLink.project.config.GotoDomainWhiteListConfiguration;
 import com.squirrel.shortLink.project.dao.entity.ShortLinkDO;
@@ -38,7 +38,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.DataValidationEvaluator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -46,6 +45,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -297,7 +297,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             shortLinkCreateReqDTO.setDescribe(describes.get(i));
             try {
                 // 4.调用本地方法，保存到数据库
-                ShortLinkCreateRespDTO shortLink = createShortLink(shortLinkCreateReqDTO);
+                // 这里有@Transactional自调用的问题，需要通过AOPContext获取代理对象，调用代理对象的createShortLink()方法
+                ShortLinkServiceImpl proxy = (ShortLinkServiceImpl)AopContext.currentProxy();
+                ShortLinkCreateRespDTO shortLink = proxy.createShortLink(shortLinkCreateReqDTO);
                 ShortLinkBaseInfoRespDTO linkBaseInfoRespDTO = ShortLinkBaseInfoRespDTO.builder()
                         .fullShortUrl(shortLink.getFullShortUrl())
                         .originUrl(shortLink.getOriginUrl())
@@ -530,6 +532,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 9.如果需要修改日期和有效时间类型，那么就要同步redis，这里采取的是删缓存
         if (!Objects.equals(hasShortLinkDO.getValidDateType(), requestParam.getValidDateType()) // 这表明需要修改有效日期
                 || !Objects.equals(hasShortLinkDO.getValidDate(), requestParam.getValidDate()) // 这表明需要修改日期
+                || !Objects.equals(hasShortLinkDO.getOriginUrl(),requestParam.getOriginUrl()) // 如果原始地址发生改变
         ) {
             // 先删除有效链接缓存
             stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
@@ -567,7 +570,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(originalLink)) {
             // 记录访问量
-            shortLinkStats(fullShortUrl,null,buildLinkStatsRecordAndSetUser(fullShortUrl,request,response));
+            shortLinkStats(buildLinkStatsRecordAndSetUser(fullShortUrl,request,response));
             // 跳转
             ((HttpServletResponse) response).sendRedirect(originalLink);
             return;
@@ -636,7 +639,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     TimeUnit.MILLISECONDS
             );
             // 记录访问量
-            shortLinkStats(fullShortUrl,null,buildLinkStatsRecordAndSetUser(fullShortUrl,request,response));
+            shortLinkStats(buildLinkStatsRecordAndSetUser(fullShortUrl,request,response));
             // 跳转
             ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
         } finally {
@@ -717,15 +720,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     /**
      * 统计短链接uv，pv，uip
-     * @param fullShortUrl 完整短链接
-     * @param gid 分组标识
      * @param statsRecord 短链接统计实体参数
      */
     @Override
-    public void shortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO statsRecord) {
+    public void shortLinkStats(ShortLinkStatsRecordDTO statsRecord) {
         Map<String, String> producerMap = new HashMap<>();
-        producerMap.put("fullShortUrl", fullShortUrl);
-        producerMap.put("gid", gid);
         producerMap.put("statsRecord", JSON.toJSONString(statsRecord));
         // 使用redis的消息队列保存短链接访问记录
         shortLinkStatsSaveProducer.send(producerMap);

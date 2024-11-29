@@ -25,11 +25,15 @@ public interface LinkNetworkStatsMapper extends BaseMapper<LinkNetworkStatsDO> {
      * @param requestParam 查询参数
      * @return 监控数据
      */
-    @Select("select network,sum(cnt) as count " +
-            "from t_link_network_stats " +
-            "where full_short_url = #{param.fullShortUrl} " +
-            "and date between #{param.startDate} and #{param.endDate} " +
-            "group by full_short_url,network")
+    @Select("select tlns.network,sum(tlns.cnt) as count " +
+            "from t_link tl " +
+            "inner join t_link_network_stats tlns on tl.full_short_url = tlns.full_short_url " +
+            "where tlns.full_short_url = #{param.fullShortUrl} " +
+            "and tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = #{param.enableStatus} " +
+            "and tlns.date between #{param.startDate} and #{param.endDate} " +
+            "group by tlns.full_short_url,tl.gid,tlns.network")
     List<LinkNetworkStatsDO> listNetworkStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 
     /**
@@ -37,9 +41,13 @@ public interface LinkNetworkStatsMapper extends BaseMapper<LinkNetworkStatsDO> {
      * @param requestParam 分组信息
      * @return 网络监控数据
      */
-    @Select("select network,sum(cnt) as count " +
-            "from t_link_network_stats " +
-            "where date between #{param.startDate} and #{param.endDate} " +
-            "group by network")
+    @Select("select tlns.network,sum(tlns.cnt) as count " +
+            "from t_link tl " +
+            "inner join t_link_network_stats tlns on tl.full_short_url = tlns.full_short_url " +
+            "where tl.gid = #{param.gid} " +
+            "and tl.del_flag = '0' " +
+            "and tl.enable_status = '0' " +
+            "and tlns.date between #{param.startDate} and #{param.endDate} " +
+            "group by tl.gid,tlns.network")
     List<LinkNetworkStatsDO> listNetworkStatsByGroup(@Param("param") ShortLinkGroupStatsReqDTO requestParam);
 }

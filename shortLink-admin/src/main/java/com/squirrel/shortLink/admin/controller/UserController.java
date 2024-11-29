@@ -1,8 +1,8 @@
 package com.squirrel.shortLink.admin.controller;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.squirrel.common.convention.result.Result;
-import com.squirrel.common.convention.result.Results;
+import com.squirrel.shortLink.common.convention.result.Result;
+import com.squirrel.shortLink.common.convention.result.Results;
 import com.squirrel.shortLink.admin.dto.req.UserLoginReqDTO;
 import com.squirrel.shortLink.admin.dto.req.UserRegisterReqDTO;
 import com.squirrel.shortLink.admin.dto.req.UserUpdateReqDTO;

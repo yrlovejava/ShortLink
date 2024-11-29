@@ -1,7 +1,7 @@
-package com.squirrel.common.convention.exception;
+package com.squirrel.shortLink.common.convention.exception;
 
-import com.squirrel.common.convention.errorcode.BaseErrorCode;
-import com.squirrel.common.convention.errorcode.IErrorCode;
+import com.squirrel.shortLink.common.convention.errorcode.BaseErrorCode;
+import com.squirrel.shortLink.common.convention.errorcode.IErrorCode;
 
 import java.util.Optional;
 

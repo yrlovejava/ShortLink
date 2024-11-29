@@ -2,8 +2,8 @@ package com.squirrel.shortLink.project.controller;
 
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.squirrel.common.convention.result.Result;
-import com.squirrel.common.convention.result.Results;
+import com.squirrel.shortLink.common.convention.result.Result;
+import com.squirrel.shortLink.common.convention.result.Results;
 import com.squirrel.shortLink.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkPageReqDTO;

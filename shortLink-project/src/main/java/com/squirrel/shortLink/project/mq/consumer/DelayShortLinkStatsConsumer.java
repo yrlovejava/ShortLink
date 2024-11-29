@@ -1,6 +1,6 @@
 package com.squirrel.shortLink.project.mq.consumer;
 
-import com.squirrel.common.convention.exception.ServiceException;
+import com.squirrel.shortLink.common.convention.exception.ServiceException;
 import com.squirrel.shortLink.project.dto.biz.ShortLinkStatsRecordDTO;
 import com.squirrel.shortLink.project.mq.idempotent.MessageQueueIdempotentHandler;
 import com.squirrel.shortLink.project.service.ShortLinkService;
@@ -61,7 +61,7 @@ public class DelayShortLinkStatsConsumer implements InitializingBean {
                             throw new ServiceException("消息未完成流程，需要消息队列重试");
                         }
                         try {
-                            shortLinkService.shortLinkStats(null,null,statsRecord);
+                            shortLinkService.shortLinkStats(statsRecord);
                         }catch (Throwable ex){
                             messageQueueIdempotentHandler.delMessageProcessed(statsRecord.getKeys());
                             log.error("延迟队列记录短链接监控消费异常",ex);

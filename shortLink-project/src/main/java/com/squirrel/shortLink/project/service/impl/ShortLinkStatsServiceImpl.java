@@ -310,7 +310,9 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
 
         // 5.查询用户记录和是否为新旧用户
         List<Map<String, Object>> ubTypeList = linkAccessLogsMapper.selectUvTypeByUsers(
+                requestParam.getGid(),
                 requestParam.getFullShortUrl(),
+                requestParam.getEnableStatus(),
                 requestParam.getStartDate(),
                 requestParam.getEndDate(),
                 userAccessLogsList
@@ -506,22 +508,16 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
      */
     @Override
     public IPage<ShortLinkStatsAccessRecordRespDTO> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
-        // 1.构造查询表条件
-        LambdaQueryWrapper<LinkAccessLogsDO> queryWrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
-                .between(LinkAccessLogsDO::getCreateTime, requestParam.getStartDate(), requestParam.getEndDate())
-                .eq(LinkAccessLogsDO::getDelFlag, 0)
-                .orderByDesc(LinkAccessLogsDO::getCreateTime);
+        // 1.分页查询短链接访问记录
+        IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectGroupPage(requestParam);
 
-        // 2.分页查询短链接访问记录
-        IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectPage(requestParam, queryWrapper);
-
-        // 3.处理查询到的访问记录
+        // 2.处理查询到的访问记录
         IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
         List<String> userAccessLogsList = actualResult.getRecords().stream()
                 .map(ShortLinkStatsAccessRecordRespDTO::getUser)
                 .toList();
 
-        // 4.按照用户名查询uv和是否为新老用户
+        // 3.按照用户名查询uv和是否为新老用户
         List<Map<String, Object>> uvTypeList = linkAccessLogsMapper.selectGroupUvTypeByUsers(
                 requestParam.getGid(),
                 requestParam.getStartDate(),
@@ -529,7 +525,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 userAccessLogsList
         );
 
-        // 5.处理查询到的结果集
+        // 4.处理查询到的结果集
         actualResult.getRecords().forEach(each -> {
             String uvType = uvTypeList.stream()
                     .filter(item -> Objects.equals(each.getUser(), item.get("user")))

@@ -1,7 +1,7 @@
-package com.squirrel.common.convention.result;
+package com.squirrel.shortLink.common.convention.result;
 
-import com.squirrel.common.convention.errorcode.BaseErrorCode;
-import com.squirrel.common.convention.exception.AbstractException;
+import com.squirrel.shortLink.common.convention.errorcode.BaseErrorCode;
+import com.squirrel.shortLink.common.convention.exception.AbstractException;
 
 import java.util.Optional;
 
@@ -62,7 +62,7 @@ public final class Results {
      * @param errorMessage 错误信息
      * @return 失败响应
      */
-    public static Result<Void> failure(String errorCode,String errorMessage) {
+    public static Result<Void> failure(String errorCode, String errorMessage) {
         return new Result<Void>()
                 .setCode(errorCode)
                 .setMessage(errorMessage);

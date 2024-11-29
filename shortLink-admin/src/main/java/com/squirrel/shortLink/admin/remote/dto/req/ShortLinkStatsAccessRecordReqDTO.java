@@ -1,4 +1,4 @@
-package com.squirrel.shortLink.admin.dto.req;
+package com.squirrel.shortLink.admin.remote.dto.req;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;
@@ -28,4 +28,9 @@ public class ShortLinkStatsAccessRecordReqDTO extends Page {
      * 结束日期
      */
     private String endDate;
+
+    /**
+     * 启用标识 0: 启用 1: 未启用
+     */
+    private Integer enableStatus;
 }
