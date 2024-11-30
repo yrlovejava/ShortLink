@@ -5,8 +5,8 @@ import com.google.common.collect.Lists;
 import com.squirrel.shortLink.common.convention.exception.ClientException;
 import com.squirrel.shortLink.common.convention.result.Results;
 import com.squirrel.shortLink.admin.config.UserFlowRiskControlConfiguration;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -32,9 +32,19 @@ public class UserFlowRiskControlFilter implements Filter {
     private final StringRedisTemplate stringRedisTemplate;
     private final UserFlowRiskControlConfiguration userFlowRiskControlConfiguration;
 
-    private DefaultRedisScript<Long> USER_FLOW_RISK_CONTROL_SCRIPT;
+    private static final DefaultRedisScript<Long> USER_FLOW_RISK_CONTROL_SCRIPT;
 
     private static final String USER_FLOW_RISK_CONTROL_LUA_SCRIPT_PATH = "lua/user_flow_risk_control.lua";
+
+    /**
+     * 初始化lua脚本
+     */
+   static {
+        log.info("init user flow risk control script");
+        USER_FLOW_RISK_CONTROL_SCRIPT = new DefaultRedisScript<>();
+        USER_FLOW_RISK_CONTROL_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource(USER_FLOW_RISK_CONTROL_LUA_SCRIPT_PATH)));
+        USER_FLOW_RISK_CONTROL_SCRIPT.setResultType(Long.class);
+    }
 
     /**
      * 流量限制
@@ -47,6 +57,12 @@ public class UserFlowRiskControlFilter implements Filter {
     @SneakyThrows
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        String uri = ((HttpServletRequest) servletRequest).getRequestURI();
+        // 排除指定路径
+        if (uri.startsWith("/doc.html")) {
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
         // 1.获取用户名
         String username = Optional.ofNullable(UserContext.getUsername()).orElse("other");
         // 2.执行lua脚本，获取滑动窗口中的数量
@@ -65,17 +81,6 @@ public class UserFlowRiskControlFilter implements Filter {
         }
         // 4.放行
         filterChain.doFilter(servletRequest, servletResponse);
-    }
-
-    /**
-     * 初始化lua脚本
-     * 容器启动的时候就执行
-     */
-    @PostConstruct
-    void initScript(){
-        USER_FLOW_RISK_CONTROL_SCRIPT = new DefaultRedisScript<>();
-        USER_FLOW_RISK_CONTROL_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource(USER_FLOW_RISK_CONTROL_LUA_SCRIPT_PATH)));
-        USER_FLOW_RISK_CONTROL_SCRIPT.setResultType(Long.class);
     }
 
     /**

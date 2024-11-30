@@ -22,6 +22,12 @@ public class UserTransmitFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
+        String uri = httpServletRequest.getRequestURI();
+        // 排除指定路径
+        if (uri.startsWith("/doc.html")) {
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
         // 获取用户名
         String username = httpServletRequest.getHeader("username");
         if (StrUtil.isNotBlank(username)) {

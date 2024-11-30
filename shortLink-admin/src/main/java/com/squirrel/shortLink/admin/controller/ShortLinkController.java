@@ -13,6 +13,8 @@ import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import com.squirrel.shortLink.admin.toolkit.EasyExcelWebUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -26,6 +28,7 @@ import java.util.List;
 @RestController(value = "shortLinkControllerByAdmin")
 @RequiredArgsConstructor
 @RequestMapping("/api/short-link/admin/v1")
+@Tag(name = "短链接后管控制层")
 public class ShortLinkController {
 
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;
@@ -35,6 +38,7 @@ public class ShortLinkController {
      * @param requestParam 短链接创建信息
      * @return Result<ShortLinkCreateRespDTO>
      */
+    @Operation(summary = "创建短链接")
     @PostMapping("/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         return shortLinkActualRemoteService.createShortLink(requestParam);
@@ -45,6 +49,7 @@ public class ShortLinkController {
      * @param requestParam 批量短链接创建信息
      * @param response http响应
      */
+    @Operation(summary = "批量创建短链接")
     @SneakyThrows
     @PostMapping("/create/batch")
     public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam, HttpServletResponse response) {
@@ -60,6 +65,7 @@ public class ShortLinkController {
      * @param requestParam 分页信息
      * @return Result<Page<ShortLinkPageRespDTO>>
      */
+    @Operation(summary = "分页查询短链接")
     @GetMapping("/page")
     public Result<Page<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
         return shortLinkActualRemoteService.pageShortLink(requestParam.getGid(), requestParam.getOrderTag(), requestParam.getCurrent(), requestParam.getSize());
@@ -70,6 +76,7 @@ public class ShortLinkController {
      * @param requestParam 修改短链接信息
      * @return Result<Void>
      */
+    @Operation(summary = "修改短链接")
     @PostMapping("/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
         shortLinkActualRemoteService.updateShortLink(requestParam);

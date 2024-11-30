@@ -10,6 +10,8 @@ import com.squirrel.shortLink.admin.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.shortLink.admin.remote.ShortLinkActualRemoteService;
 import com.squirrel.shortLink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import com.squirrel.shortLink.admin.service.RecycleBinService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController(value = "recycleBinControllerByAdmin")
 @RequiredArgsConstructor
 @RequestMapping("/api/short-link/admin/v1/recycle-bin")
+@Tag(name = "回收管理控制层")
 public class RecycleBinController {
 
     private final RecycleBinService recycleBinService;
@@ -29,6 +32,7 @@ public class RecycleBinController {
      * 保存回收站
      * @param requestParam 保存回收站短链接信息
      */
+    @Operation(summary = "保存回收站")
     @PostMapping("/save")
     public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO requestParam) {
         shortLinkActualRemoteService.saveRecycleBin(requestParam);
@@ -39,6 +43,7 @@ public class RecycleBinController {
      * 分页查询回收站短链接
      * @param requestParam 分页查询信息
      */
+    @Operation(summary = "分页查询回收站短链接")
     @GetMapping("/page")
     public Result<Page<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         return recycleBinService.pageRecycleBinShortLink(requestParam);
@@ -49,6 +54,7 @@ public class RecycleBinController {
      * @param requestParam 恢复短链接参数
      * @return Result<Void>
      */
+    @Operation(summary = "恢复短链接")
     @PostMapping("/recover")
     public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam) {
         shortLinkActualRemoteService.recoverRecycleBin(requestParam);
@@ -59,6 +65,7 @@ public class RecycleBinController {
      * 移除短链接
      * @param requestParam 移除短链接信息
      */
+    @Operation(summary = "移除短链接")
     @PostMapping("/remove")
     public Result<Void> removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO requestParam) {
         shortLinkActualRemoteService.removeRecycleBin(requestParam);

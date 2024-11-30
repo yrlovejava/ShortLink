@@ -47,6 +47,6 @@ public class GroupDO extends BaseDO {
     /**
      * 分组排序
      */
-    @TableField("sortOrder")
+    @TableField("sort_order")
     private Integer sortOrder;
 }
