@@ -11,6 +11,7 @@ import com.squirrel.shortLink.admin.dto.resp.ShortLinkStatsRespDTO;
 import com.squirrel.shortLink.admin.remote.ShortLinkActualRemoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController(value = "shortLinkStatsControllerByAdmin")
 @RequiredArgsConstructor
+@RequestMapping("/api/short-link/admin/v1/stats")
 public class ShortLinkStatsController {
 
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;
@@ -27,7 +29,7 @@ public class ShortLinkStatsController {
      * @param requestParam 查询参数
      * @return Result<ShortLinkStatsRespDTO>
      */
-    @GetMapping("/api/short-link/admin/v1/stats")
+    @GetMapping()
     public Result<ShortLinkStatsRespDTO> shortLinkStats(ShortLinkStatsReqDTO requestParam) {
         return shortLinkActualRemoteService.oneShortLinkStats(
                 requestParam.getFullShortUrl(),
@@ -43,7 +45,7 @@ public class ShortLinkStatsController {
      * @param requestParam 单个短链接信息
      * @return Result<Page<ShortLinkStatsAccessRecordRespDTO>>
      */
-    @GetMapping("/api/short-link/admin/v1/stats/access-record")
+    @GetMapping("/access-record")
     public Result<Page<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
         return shortLinkActualRemoteService.shortLinkStatsAccessRecord(
                 requestParam.getFullShortUrl(),
@@ -61,7 +63,7 @@ public class ShortLinkStatsController {
      * @param requestParam 分组短链接信息
      * @return Result<ShortLinkStatsRespDTO>
      */
-    @GetMapping("/api/short-link/admin/v1/stats/group")
+    @GetMapping("/group")
     public Result<ShortLinkStatsRespDTO> groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
         return shortLinkActualRemoteService.groupShortLinkStats(
                 requestParam.getGid(),
@@ -75,7 +77,7 @@ public class ShortLinkStatsController {
      * @param requestParam 分组短链接信息
      * @return Result<Page<ShortLinkStatsAccessRecordRespDTO>>
      */
-    @GetMapping("/api/short-link/admin/v1/stats/access-record/group")
+    @GetMapping("/access-record/group")
     public Result<Page<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
         return shortLinkActualRemoteService.groupShortLinkStatsAccessRecord(
                 requestParam.getGid(),

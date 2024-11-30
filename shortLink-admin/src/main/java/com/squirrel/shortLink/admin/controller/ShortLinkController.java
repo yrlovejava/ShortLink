@@ -25,6 +25,7 @@ import java.util.List;
  */
 @RestController(value = "shortLinkControllerByAdmin")
 @RequiredArgsConstructor
+@RequestMapping("/api/short-link/admin/v1")
 public class ShortLinkController {
 
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;
@@ -34,7 +35,7 @@ public class ShortLinkController {
      * @param requestParam 短链接创建信息
      * @return Result<ShortLinkCreateRespDTO>
      */
-    @PostMapping("/api/short-link/admin/v1/create")
+    @PostMapping("/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         return shortLinkActualRemoteService.createShortLink(requestParam);
     }
@@ -45,7 +46,7 @@ public class ShortLinkController {
      * @param response http响应
      */
     @SneakyThrows
-    @PostMapping("/api/short-link/admin/v1/create/batch")
+    @PostMapping("/create/batch")
     public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam, HttpServletResponse response) {
         Result<ShortLinkBatchCreateRespDTO> shortLinkBatchCreateRespDTOResult = shortLinkActualRemoteService.batchCreateShortLink(requestParam);
         if (shortLinkBatchCreateRespDTOResult.isSuccess()) {
@@ -59,7 +60,7 @@ public class ShortLinkController {
      * @param requestParam 分页信息
      * @return Result<Page<ShortLinkPageRespDTO>>
      */
-    @GetMapping("/api/short-link/admin/v1/page")
+    @GetMapping("/page")
     public Result<Page<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
         return shortLinkActualRemoteService.pageShortLink(requestParam.getGid(), requestParam.getOrderTag(), requestParam.getCurrent(), requestParam.getSize());
     }
@@ -69,7 +70,7 @@ public class ShortLinkController {
      * @param requestParam 修改短链接信息
      * @return Result<Void>
      */
-    @PostMapping("/api/short-link/admin/v1/update")
+    @PostMapping("/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
         shortLinkActualRemoteService.updateShortLink(requestParam);
         return Results.success();

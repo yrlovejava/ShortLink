@@ -4,6 +4,7 @@ import com.squirrel.shortLink.common.convention.result.Result;
 import com.squirrel.shortLink.admin.remote.ShortLinkActualRemoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController(value = "urlTitleControllerByAdmin")
 @RequiredArgsConstructor
+@RequestMapping("/api/short-link/admin/v1/title")
 public class UrlTitleController {
 
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;
@@ -21,7 +23,7 @@ public class UrlTitleController {
      * @param url 网站url
      * @return Result<String>
      */
-    @GetMapping("/api/short-link/admin/v1/title")
+    @GetMapping()
     public Result<String> getTitleByUrl(@RequestParam("url") String url) {
         return shortLinkActualRemoteService.getTitleByUrl(url);
     }
