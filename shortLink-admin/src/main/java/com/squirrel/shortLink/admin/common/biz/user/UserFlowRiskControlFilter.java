@@ -2,8 +2,8 @@ package com.squirrel.shortLink.admin.common.biz.user;
 
 import com.alibaba.fastjson2.JSON;
 import com.google.common.collect.Lists;
-import com.squirrel.common.convention.exception.ClientException;
-import com.squirrel.common.convention.result.Results;
+import com.squirrel.shortLink.common.convention.exception.ClientException;
+import com.squirrel.shortLink.common.convention.result.Results;
 import com.squirrel.shortLink.admin.config.UserFlowRiskControlConfiguration;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.*;
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Optional;
 
-import static com.squirrel.common.convention.errorcode.BaseErrorCode.FLOW_LIMIT_ERROR;
+import static com.squirrel.shortLink.common.convention.errorcode.BaseErrorCode.FLOW_LIMIT_ERROR;
 
 /**
  * 用户流量风控过滤器
