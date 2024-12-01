@@ -11,7 +11,8 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 127.0.0.1:8848
+        server-addr: 139.159.224.143:8848
+        namespace: 03e1511c-a459-49bc-a3b4-bc7d420e291b
     gateway:
       routes:
         - id: short-link-admin
