@@ -10,6 +10,8 @@ import com.squirrel.shortLink.project.dto.req.ShortLinkStatsReqDTO;
 import com.squirrel.shortLink.project.dto.resp.ShortLinkStatsAccessRecordRespDTO;
 import com.squirrel.shortLink.project.dto.resp.ShortLinkStatsRespDTO;
 import com.squirrel.shortLink.project.service.ShortLinkStatsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "短链接监控控制层")
 public class ShortLinkStatsController {
 
     private final ShortLinkStatsService shortLinkStatsService;
@@ -28,6 +31,7 @@ public class ShortLinkStatsController {
      * @param requestParam 访问短链接参数
      * @return Result<ShortLinkStatsRespDTO>
      */
+    @Operation(summary = "访问单个短链接指定时间内监控数据")
     @GetMapping("/api/short-link/v1/stats")
     public Result<ShortLinkStatsRespDTO> shortLinkStats(ShortLinkStatsReqDTO requestParam) {
         return Results.success(shortLinkStatsService.oneShortLinkStats(requestParam));
@@ -38,6 +42,7 @@ public class ShortLinkStatsController {
      * @param requestParam 短链接信息
      * @return Result<IPage<ShortLinkStatsAccessRecordRespDTO>>
      */
+    @Operation(summary = "访问单个短链接指定时间内访问记录监控数据")
     @GetMapping("/api/short-link/v1/stats/access-record")
     public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
         return Results.success(shortLinkStatsService.shortLinkStatsAccessRecord(requestParam));
@@ -48,6 +53,7 @@ public class ShortLinkStatsController {
      * @param requestParam 分组短链接信息
      * @return Result<ShortLinkStatsRespDTO>
      */
+    @Operation(summary = "访问分组短链接指定时间内监控数据")
     @GetMapping("/api/short-link/v1/stats/group")
     public Result<ShortLinkStatsRespDTO> groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
         return Results.success(shortLinkStatsService.groupShortLinkStats(requestParam));
@@ -58,6 +64,7 @@ public class ShortLinkStatsController {
      * @param requestParam 分组短链接信息
      * @return Result<IPage<ShortLinkStatsAccessRecordRespDTO>>
      */
+    @Operation(summary = "访问分组短链接指定时间内监控数据")
     @GetMapping("/api/short-link/v1/stats/access-record/group")
     public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
         return Results.success(shortLinkStatsService.groupShortLinkStatsAccessRecord(requestParam));

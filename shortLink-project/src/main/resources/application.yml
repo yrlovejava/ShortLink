@@ -18,8 +18,8 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 192.168.183.131:80
-        namespace: 882d6e4e-efd1-48a7-948b-b4800ce9d833
+        server-addr: 139.159.224.143:8848
+        namespace: 03e1511c-a459-49bc-a3b4-bc7d420e291b
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml

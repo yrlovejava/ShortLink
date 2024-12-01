@@ -1,6 +1,5 @@
 package com.squirrel.shortLink.project.common.biz.user;
 
-import cn.hutool.system.UserInfo;
 import com.alibaba.ttl.TransmittableThreadLocal;
 
 import java.util.Optional;

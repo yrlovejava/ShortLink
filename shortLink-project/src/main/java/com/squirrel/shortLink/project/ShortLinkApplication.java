@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * 短链接应用
  */
 @SpringBootApplication
-@MapperScan("com.squirrel.project.dao.mapper")
+@MapperScan("com.squirrel.shortLink.project.dao.mapper")
 @EnableTransactionManagement
 @EnableDiscoveryClient
 public class ShortLinkApplication {

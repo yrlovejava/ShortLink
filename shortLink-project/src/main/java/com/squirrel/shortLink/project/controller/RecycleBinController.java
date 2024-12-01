@@ -9,17 +9,18 @@ import com.squirrel.shortLink.project.dto.req.RecycleBinSaveReqDTO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.squirrel.shortLink.project.dto.resp.ShortLinkPageRespDTO;
 import com.squirrel.shortLink.project.service.RecycleBinService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 回收站管理控制层
  */
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/short-link/v1/recycle-bin")
+@Tag(name = "回收站管理控制层")
 public class RecycleBinController {
 
     private final RecycleBinService recycleBinService;
@@ -29,7 +30,8 @@ public class RecycleBinController {
      * @param requestParam 回收站保存参数
      * @return Result<Void>
      */
-    @PostMapping("/api/short-link/v1/recycle-bin/save")
+    @Operation(summary = "保存回收站")
+    @PostMapping("/save")
     public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO requestParam) {
         recycleBinService.saveRecycleBin(requestParam);
         return Results.success();
@@ -40,7 +42,8 @@ public class RecycleBinController {
      * @param requestParam 分页查询短链接参数
      * @return Result<IPage<ShortLinkPageRespDTO>>
      */
-    @GetMapping("/api/short-link/v1/recycle-bin/page")
+    @Operation(summary = "分页查询回收站短链接")
+    @GetMapping("/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         return Results.success(recycleBinService.pageShortLink(requestParam));
     }
@@ -50,7 +53,8 @@ public class RecycleBinController {
      * @param requestParam 恢复短链接参数
      * @return  Result<Void>
      */
-    @PostMapping("/api/short-link/v1/recycle-bin/recover")
+    @Operation(summary = "恢复短链接")
+    @PostMapping("/recover")
     public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam) {
         recycleBinService.recoverRecycleBin(requestParam);
         return Results.success();
@@ -61,7 +65,8 @@ public class RecycleBinController {
      * @param requestParam 移除短链接的参数
      * @return Result<Void>
      */
-    @PostMapping("/api/short-link/v1/recycle-bin/remove")
+    @Operation(summary = "移除短链接")
+    @PostMapping("/remove")
     public Result<Void> removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO requestParam) {
         recycleBinService.removeRecycleBin(requestParam);
         return Results.success();
