@@ -33,7 +33,8 @@ short-link:
       amap-key: 38e9e76ff59f23c098758b98c5063b33
   goto-domain:
     white-list:
-      enable: true
+      # 测试的时候改为false
+      enable: false
       names: "拿个offer，知乎，掘金，博客园"
       details:
         - nageoffer.com

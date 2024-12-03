@@ -343,10 +343,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     /**
      * 生成短链接
      *
-     * @param dto 短链接创建的参数
+     * @param requestParam 短链接创建的参数
      * @return 短链接
      */
-    private String generateSuffix(ShortLinkCreateReqDTO dto) {
+    private String generateSuffix(ShortLinkCreateReqDTO requestParam) {
         // 1.初始化计数器
         int customGenerateCount = 0;
         String shortUri;
@@ -355,7 +355,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             if (customGenerateCount > 10) {
                 throw new ServiceException("短链接频繁生成，请稍后再试");
             }
-            String originUrl = dto.getOriginUrl();
+            String originUrl = requestParam.getOriginUrl();
             originUrl += UUID.randomUUID().toString();
             shortUri = HashUtil.hashToBase62(originUrl);
             if (!shortUriCreateCachePenetrationBloomFilter.contains(createShortLinkDefaultDomain + "/" + shortUri)) {

@@ -67,7 +67,7 @@ public class ShortLinkDO extends BaseDO {
     /**
      * 启用标识 0：启用 1：未启用
      */
-    @TableField("enableStatus")
+    @TableField("enable_status")
     private Integer enableStatus;
 
     /**
@@ -79,7 +79,7 @@ public class ShortLinkDO extends BaseDO {
     /**
      * 有效期类型 0：永久有效 1：自定义
      */
-    @TableField("validDateType")
+    @TableField("valid_date_type")
     private Integer validDateType;
 
     /**
