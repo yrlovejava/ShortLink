@@ -47,6 +47,7 @@ public class ShortLinkController {
 
     /**
      * 创建短链接
+     * 本地: 100 个线程压测10分钟，tps: 10.1 / min
      * @param requestParam 创建短链接的参数
      * @return Result<ShortLinkCreateRespDTO>
      */
@@ -63,6 +64,7 @@ public class ShortLinkController {
 
     /**
      * 通过分布式锁创建短链接
+     * 本地: 100 个线程压测10分钟，tps: 6.5/min
      * @param requestParam 创建短链接请求参数
      * @return Result<ShortLinkCreateRespDTO>
      */

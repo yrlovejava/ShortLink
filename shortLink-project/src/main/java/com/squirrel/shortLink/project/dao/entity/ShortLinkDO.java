@@ -55,7 +55,7 @@ public class ShortLinkDO extends BaseDO {
     /**
      * 点击量
      */
-    @TableField("check_num")
+    @TableField("click_num")
     private Integer clickNum;
 
     /**
