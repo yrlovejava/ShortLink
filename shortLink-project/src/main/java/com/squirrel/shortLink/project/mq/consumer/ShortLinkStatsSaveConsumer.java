@@ -139,10 +139,9 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                 .hour(hour)
                 .weekday(weekValue)
                 .fullShortUrl(fullShortUrl)
-                .gid(gid)
                 .date(currentDate)
                 .build();
-        linkAccessStatsMapper.insert(linkAccessStatsDO);
+        linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
 
         // 5.调用高德开放api接口，解析ip的所处地址
         Map<String,Object> localeParamMap = new HashMap<>();
@@ -169,7 +168,6 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                     .cnt(1)
                     .fullShortUrl(fullShortUrl)
                     .country("中国")
-                    .gid(gid)
                     .date(currentDate)
                     .build();
             linkLocaleStatsMapper.insert(linkLocaleStatsDO);
@@ -179,17 +177,15 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
                 .os(statsRecord.getOs())
                 .cnt(1)
-                .gid(gid)
                 .fullShortUrl(fullShortUrl)
                 .date(currentDate)
                 .build();
-        linkOsStatsMapper.insert(linkOsStatsDO);
+        linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
 
         // 8.构造浏览器统计实体，并插入数据库
         LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
                 .browser(statsRecord.getBrowser())
                 .cnt(1)
-                .gid(gid)
                 .fullShortUrl(fullShortUrl)
                 .date(currentDate)
                 .build();
@@ -199,7 +195,6 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
                 .device(statsRecord.getDevice())
                 .cnt(1)
-                .gid(gid)
                 .fullShortUrl(fullShortUrl)
                 .date(currentDate)
                 .build();
@@ -209,7 +204,6 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
         LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
                 .network(statsRecord.getNetwork())
                 .cnt(1)
-                .gid(gid)
                 .fullShortUrl(fullShortUrl)
                 .date(currentDate)
                 .build();
@@ -236,7 +230,6 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
                 .todayPv(1)
                 .todayUv(statsRecord.getUvFirstFlag() ? 1 : 0)
                 .todayUip(statsRecord.getUipFirstFlag() ? 1 : 0)
-                .gid(gid)
                 .fullShortUrl(fullShortUrl)
                 .date(new Date())
                 .build();

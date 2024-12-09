@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.squirrel.shortLink.project.dao.entity.LinkNetworkStatsDO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkGroupStatsReqDTO;
 import com.squirrel.shortLink.project.dto.req.ShortLinkStatsReqDTO;
-import io.lettuce.core.dynamic.annotation.Param;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;

@@ -29,7 +29,7 @@ public interface LinkOsStatsMapper extends BaseMapper<LinkOsStatsDO> {
     @Select("select tlos.os,sum(tlos.cnt) as count " +
             "from t_link tl " +
             "inner join t_link_os_stats tlos on tl.full_short_url = tlos.full_short_url " +
-            "where tlns.full_short_url = #{param.fullShortUrl} " +
+            "where tlos.full_short_url = #{param.fullShortUrl} " +
             "and tl.gid = #{param.gid} " +
             "and tl.del_flag = '0' " +
             "and tl.enable_status = #{param.enableStatus} " +

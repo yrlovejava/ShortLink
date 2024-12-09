@@ -35,12 +35,6 @@ public class LinkDeviceStatsDO extends BaseDO {
     private String fullShortUrl;
 
     /**
-     * 分组标识
-     */
-    @TableField(exist = false)
-    private String gid;
-
-    /**
      * 日期
      */
     @TableField("date")

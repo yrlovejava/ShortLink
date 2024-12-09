@@ -35,12 +35,6 @@ public class LinkOsStatsDO extends BaseDO {
     private String fullShortUrl;
 
     /**
-     * 分组id
-     */
-    @TableField(exist = false)
-    private String gid;
-
-    /**
      * 日期
      */
     @TableField("date")

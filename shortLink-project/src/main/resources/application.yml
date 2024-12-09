@@ -21,7 +21,7 @@ spring:
         server-addr: 139.159.224.143:8848
         namespace: 03e1511c-a459-49bc-a3b4-bc7d420e291b
 
-mybatis:
+mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.squirrel.project.dao.entity
   configuration:
@@ -42,4 +42,4 @@ short-link:
         - juejin.cn
         - cnblogs.com
   domain:
-    default: nurl.ink:8001
+    default: 127.0.0.1:8001

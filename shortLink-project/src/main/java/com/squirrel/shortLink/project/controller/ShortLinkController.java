@@ -35,6 +35,7 @@ public class ShortLinkController {
 
     /**
      * 短链接跳转
+     * 本地: 100 个线程压测10分钟，tps: 10.1/min
      * @param shortUri 短链接
      * @param request http请求
      * @param response http响应
