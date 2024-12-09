@@ -30,3 +30,6 @@ short-link:
 springdoc:
   api-docs:
     enabled: true
+
+database:
+  env: prod
