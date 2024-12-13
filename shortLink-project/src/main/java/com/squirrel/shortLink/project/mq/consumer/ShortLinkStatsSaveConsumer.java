@@ -23,7 +23,7 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.squirrel.shortLink.common.convention.exception.ServiceException;
+import com.squirrel.shortLink.project.common.convention.exception.ServiceException;
 import com.squirrel.shortLink.project.dao.entity.*;
 import com.squirrel.shortLink.project.dao.mapper.*;
 import com.squirrel.shortLink.project.dto.biz.ShortLinkStatsRecordDTO;

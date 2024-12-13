@@ -16,7 +16,7 @@
  */
 package com.squirrel.shortLink.project.mq.consumer;
 
-import com.squirrel.shortLink.common.convention.exception.ServiceException;
+import com.squirrel.shortLink.project.common.convention.exception.ServiceException;
 import com.squirrel.shortLink.project.dto.biz.ShortLinkStatsRecordDTO;
 import com.squirrel.shortLink.project.mq.idempotent.MessageQueueIdempotentHandler;
 import com.squirrel.shortLink.project.service.ShortLinkService;

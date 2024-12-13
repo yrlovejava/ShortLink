@@ -17,7 +17,7 @@
 package com.squirrel.shortLink.project.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.squirrel.shortLink.common.database.BaseDO;
+import com.squirrel.shortLink.project.common.database.BaseDO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

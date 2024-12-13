@@ -17,7 +17,7 @@
 package com.squirrel.shortLink.project.handler;
 
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.squirrel.shortLink.common.convention.result.Result;
+import com.squirrel.shortLink.project.common.convention.result.Result;
 import com.squirrel.shortLink.project.dto.req.ShortLinkCreateReqDTO;
 import com.squirrel.shortLink.project.dto.resp.ShortLinkCreateRespDTO;
 
